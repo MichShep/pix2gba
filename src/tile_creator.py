@@ -1,8 +1,18 @@
 from PIL import Image as PILImage
 import math
-import gba_functions as gf
+import gba_utils as gf
 
-def create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp):
+def create_tile_data(file_path:str, conversion_table:dict, meta_w:int, meta_h:int, bpp:int) -> list:
+    """
+    Takes the input image path and based on meta height and width separates them by GBA tiles (8x8 pixels)
+    and given a conversion table form rgb24 to rgb15, creates the VRAM data of palette indices.
+    :param file_path: Path to the input image
+    :param conversion_table: Dictionary of rgb24 colors to rgb15 colors (native GBA color)
+    :param meta_w: Number of tiles one meta tile's width consists of
+    :param meta_h: Number of tiles one meta tile's height consists of
+    :param bpp: The number of bits per pixel into a palette
+    :return:
+    """
     img = PILImage.open(file_path).convert("RGB")
     width, height = img.size
 
@@ -74,6 +84,6 @@ def create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp):
             y_offset = meta_row_count * 8 + metatile_row_count * meta_total_height
 
     except IndexError:
-        print("ERROR out of bounds:", x_offset, y_offset, "on dimensions", width, height)
+        print("ERROR: Out of bounds for", x_offset, y_offset, "on dimensions", width, height)
 
     return tile_data_1d

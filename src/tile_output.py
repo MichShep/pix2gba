@@ -1,16 +1,42 @@
 import os
-import gba_functions as gf
+import gba_utils as gf
 from PIL import Image as PILImage
 from datetime import datetime
-import img_converter as cv
+import tile_creator
 
-def get_filename_from_path(file_path):
+LoadedImage = PILImage.Image
+
+def get_filename_from_path(file_path:str) -> str:
+    """
+    Extracts the filename from a file path.
+    :param file_path: The total path
+    :return: The name of the file
+    """
     file_name_with_extension = os.path.basename(file_path)
     file_name = os.path.splitext(file_name_with_extension)[0]
 
     return file_name
 
-def create_header_file(file_path, pal_path, img_w, img_h,  meta_w, meta_h, bpp, include_pal, dest):
+def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_palette:list) -> None:
+    """
+    Creates the header file for the tile output.
+    :param arguments: Command line arguments
+    :param image: The PIL image
+    :param conversion_table: Dictionary of rgb24 colors to rgb15 colors (native GBA color)
+    :param gba_palette: The 2^bpp wide palette for the image (palette that will be in the GBA)
+    """
+    # Extract needed data
+    meta_w = arguments["meta_width"]
+    meta_h = arguments["meta_height"]
+    bpp = arguments["bpp"]
+
+    img_w = image.width
+    img_h = image.height
+
+    dest = arguments["destination_path"]
+    file_path = arguments["image_path"]
+    pal_path = arguments["palette_path"]
+
     file_name = get_filename_from_path(file_path)
     pal_name = get_filename_from_path(pal_path if pal_path is not None else file_path)
 
@@ -57,7 +83,7 @@ def create_header_file(file_path, pal_path, img_w, img_h,  meta_w, meta_h, bpp, 
     file_str += "extern const unsigned int "  + file_name + "Tiles[" + str(num_u32) + "];\n"
 
     # Do the declaration for palette if included
-    if include_pal:
+    if arguments["palette_included"]:
         file_str += ("\n/**\n" +
                      f" * @brief The number of bytes the Palette for {file_name} occupies. \n" +
                      " * \n" +
@@ -74,9 +100,28 @@ def create_header_file(file_path, pal_path, img_w, img_h,  meta_w, meta_h, bpp, 
     with open(new_file_name, "w") as file:
         file.write(file_str)
 
-def create_c_file(file_path, conversion_table, img_w, img_h,  meta_w, meta_h, bpp, gba_palette, include_pal, dest):
+def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_palette:list) -> None:
+    """
+    Creates the C file for the tile output.
+    :param arguments: Command line arguments
+    :param image: The PIL image
+    :param conversion_table: Dictionary of rgb24 colors to rgb15 colors (native GBA color)
+    :param gba_palette: The 2^bpp wide palette for the image (palette that will be in the GBA)
+    """
+    # Extract needed data
+    meta_w = arguments["meta_width"]
+    meta_h = arguments["meta_height"]
+    bpp    = arguments["bpp"]
+
+    img_w = image.width
+    img_h = image.height
+
+    dest = arguments["destination_path"]
+
+    file_path = arguments["image_path"]
+
     # Make the Top Comments
-    final_array = cv.create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp)
+    final_array = tile_creator.create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp)
     file_name = get_filename_from_path(file_path)
 
     # Data Size Calc
@@ -99,8 +144,9 @@ def create_c_file(file_path, conversion_table, img_w, img_h,  meta_w, meta_h, bp
 
     file_str += "};\n"
 
-    if include_pal:
-        file_str += f"\nconst unsigned short {file_name}Pal[{2**bpp}] __attribute__((aligned(4))) __attribute__((visibility(\"hidden\")))= \n{{\n"
+    if arguments["palette_included"]:
+        file_str += (f"\nconst unsigned short {file_name}Pal[{2**bpp}] "
+                     f"__attribute__((aligned(4))) __attribute__((visibility(\"hidden\")))= \n{{\n")
         for i in range(0, len(gba_palette), 8):
             # Take a slice of 8 elements
             line = gba_palette[i:i + 8]
@@ -115,7 +161,14 @@ def create_c_file(file_path, conversion_table, img_w, img_h,  meta_w, meta_h, bp
     with open(new_file_name, "w") as file:
         file.write(file_str)
 
-def create_palette_png(file_path, gba_pal, dest, bpp):
+def create_palette_png(file_path:str, gba_pal:list, dest:str, bpp:int):
+    """
+    Creates a palette for the tile output as a PNG.
+    :param file_path: Path of the source image
+    :param gba_pal: The 2^bpp wide palette for the image (palette that will be in the GBA)
+    :param dest: The destination path
+    :param bpp: Bits per pixel
+    """
     side_length = 2**(bpp//2)
     pal_img = PILImage.new(mode="RGB", size=(side_length, side_length))
 
@@ -137,12 +190,28 @@ def create_palette_png(file_path, gba_pal, dest, bpp):
 
     pal_img.save(file_path)
 
-def make_output(png_path, pal_path, conversion_table, meta_w, meta_h, bpp, output_type, gba_palette, input_inclusion, input_destination):
-    img = PILImage.open(png_path).convert("RGB")
-    width, height = img.size
+def make_output(arguments:dict, conversion_table:dict, gba_palette:list) -> None:
+    """
+    Creates the output files that the user indicated as wanted
+    :param arguments: Dictionary of command line arguments
+    :param conversion_table: Dictionary of rgb24 colors to rgb15 colors (native GBA color)
+    :param gba_palette: The 2^bpp wide palette for the image (palette that will be in the GBA)
+    """
+    img = PILImage.open(arguments["image_path"]).convert("RGB")
+
+    output_type = arguments["output_type"]
 
     if output_type == "both" or output_type == "h":
-        create_header_file(png_path, pal_path, width, height,  meta_w, meta_h, bpp, input_inclusion, input_destination)
+        create_header_file(arguments, img, conversion_table, gba_palette)
 
     if output_type == "both" or output_type == "c":
-        create_c_file(png_path, conversion_table, width, height, meta_w, meta_h, bpp, gba_palette, input_inclusion, input_destination)
+        create_c_file(arguments, img, conversion_table, gba_palette)
+
+    if arguments["generate_palette"]:
+        print("* Creating Palette PNG Preview...")
+        create_palette_png(
+            gba_pal=gba_palette,
+            dest=arguments["destination_path"],
+            file_path=arguments["image_path"],
+            bpp=arguments["bpp"]
+    )

@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     entry_points={
         "console_scripts": [
-            "img2gba.py = gba_converter.img2gba.py:main"
+            "pix2gba.py = gba_converter.pix2gba.py:main"
         ]
     },
     install_requires=[

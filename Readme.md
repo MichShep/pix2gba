@@ -2,7 +2,7 @@
 
 ## Introduction
 
-**GBA Image Converter** is a command-line tool designed to convert standard PNG images into GBA (Game Boy Advance)-compatible tile and palette data in C/C++ format. It allows developers working on GBA homebrew games or emulation tools to easily generate optimized graphics data, including metatiles and palettes, with optional C header and source files.
+**GBA Image Converter** is a command-line tool designed to convert standard PNG images into GBA (Game Boy Advance)-compatible tile and palette data in C format. Allowing developers working on GBA homebrew games or emulation tools to easily generate optimized graphics data, including metatiles and palettes, with optional C header and source files.
 
 ---
 
@@ -34,7 +34,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-python img2gba.py -i <input_image.png> -mw <meta_width> -mh <meta_height> -bpp <4|8> -o <h|c|both> [options]
+python pix2gba.py -i <input_image.png> -mw <meta_width> -mh <meta_height> -bpp <4|8> -o <h|c|both> [options]
 ```
 
 ---
@@ -44,14 +44,15 @@ python img2gba.py -i <input_image.png> -mw <meta_width> -mh <meta_height> -bpp <
 | Argument              | Description                                                                 |
 |-----------------------|-----------------------------------------------------------------------------|
 | `-i`, `--input`       | **(Required)** Path to the input PNG image.                                 |
-| `-mw`                 | **(Required)** Meta-tile width in tiles (1 tile = 8px).                     |
-| `-mh`                 | **(Required)** Meta-tile height in tiles.                                   |
+| `-mw`, `--meta_width` | **(Required)** Meta-tile width in tiles (1 tile = 8px).                     |
+| `-mh`, `--meta_height` | **(Required)** Meta-tile height in tiles.                                   |
 | `-bpp`                | **(Required)** Bits per pixel. Must be a power of 2 (4 or 8).                |
 | `-o`, `--output`      | **(Required)** Output type: `h`, `c`, or `both`.                             |
 | `-p`, `--palette`     | Optional external palette PNG file.                                          |
 | `-ip`                 | Include palette array in the output files.                                  |
 | `-gp`                 | Generate and save a PNG version of the GBA palette.                         |
 | `-d`, `--destination` | Destination directory for the output files (default: current directory).    |
+| `--help` | Display information on each possible command |
 
 ---
 
@@ -60,13 +61,13 @@ python img2gba.py -i <input_image.png> -mw <meta_width> -mh <meta_height> -bpp <
 **Basic conversion with generated palette (both `.c` and `.h`):**
 
 ```bash
-python img2gba.py -i assets/sprite.png -mw 2 -mh 2 -bpp 4 -o both
+python pix2gba.py -i assets/sprite.png -mw 2 -mh 2 -bpp 4 -o both
 ```
 
 **Using external palette and saving generated palette image:**
 
 ```bash
-python img2gba.py -i assets/bg.png -p assets/palette.png -mw 4 -mh 4 -bpp 8 -o both -ip -gp -d output/
+python pix2gba.py -i assets/bg.png -p assets/palette.png -mw 4 -mh 4 -bpp 8 -o both -ip -gp -d output/
 ```
 
 ---

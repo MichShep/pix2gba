@@ -2,3 +2,5 @@
 *.png
 *.c
 *.h
+__pycache__
+.DS_store

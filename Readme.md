@@ -6,22 +6,6 @@
 
 ---
 
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Command Line Arguments](#command-line-arguments)
-- [Examples](#examples)
-- [Dependencies](#dependencies)
-- [Configuration](#configuration)
-- [Troubleshooting](#troubleshooting)
-- [Contributors](#contributors)
-- [License](#license)
-
----
-
 ## Features
 
 - Converts PNG images to GBA-compatible `.c` and `.h` files.

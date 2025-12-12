@@ -3,12 +3,13 @@
 
 //======================================================================
 //	test, 200pxl by 200pxl @ 4bpp
-//	 + Number of Tiles : 625
-//	 + Metatile Shape  : 1w by 1h
-//	 + Dimensions in MT: 25w by 25h
-//	 + Number of Bytes : 20000
-//	 + Number of U32   : 5000
-//	2025-12-11 22:06:07.926090
+//	+ Number of Tiles : 625
+//	+ Metatile Shape  : 1w by 1h
+//	+ Dimensions in MT: 25w by 25h
+//	+ Number of Bytes : 20000
+//	+ Number of U32   : 5000
+//	+ Blank Color     : 0x5d53
+//	2025-12-12 00:37:17.893529
 //======================================================================
 
 /**
@@ -37,6 +38,5 @@ extern const unsigned int testTiles[5000];
 
 /**
  * @brief The array of rgb5 (short) numbers that create test's Palette. 
- * @note The Palette's size is 16
  */
 extern const unsigned short testPal[16];

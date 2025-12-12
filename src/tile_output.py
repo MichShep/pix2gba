@@ -1,4 +1,7 @@
 import os
+
+from django.template.defaultfilters import upper
+
 import gba_utils as gf
 from PIL import Image as PILImage
 from datetime import datetime
@@ -55,12 +58,13 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
 
     file_str += ("//======================================================================\n" +
                  "//	" + file_name + ", " + str(img_w) + "pxl by " + str(img_h) + "pxl @ " + str(bpp) + "bpp\n" +
-                 "//	 + Number of Tiles : " + str(num_tiles) + "\n" +
-                 "//	 + Metatile Shape  : " + str(meta_w) + "w by " + str(meta_h) + "h\n" +
-                 "//	 + Dimensions in MT: " + str(img_w//(8*meta_w)) + "w by " + str(img_h // (8*meta_h)) + "h\n" +
-                 "//	 + Number of Bytes : " + str(num_bytes) + "\n" +
-                 "//	 + Number of U32   : " + str(num_u32) + "\n" +
-                 "//	" + str(datetime.now()) + "\n" +
+                 "//\t+ Number of Tiles : " + str(num_tiles) + "\n" +
+                 "//\t+ Metatile Shape  : " + str(meta_w) + "w by " + str(meta_h) + "h\n" +
+                 "//\t+ Dimensions in MT: " + str(img_w//(8*meta_w)) + "w by " + str(img_h // (8*meta_h)) + "h\n" +
+                 "//\t+ Number of Bytes : " + str(num_bytes) + "\n" +
+                 "//\t+ Number of U32   : " + str(num_u32) + "\n" +
+                 "//\t+ Blank Color     : " + hex(gba_palette[0]) + "\n" +
+                 "//\t" + str(datetime.now()) + "\n" +
                  "//======================================================================\n\n"
                  )
 
@@ -88,12 +92,11 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
                      f" * @brief The number of bytes the Palette for {file_name} occupies. \n" +
                      " * \n" +
                      " */\n")
-        file_str += "#define " + file_name + "PalLen " + str((2 ** bpp) * 2) + "\n"
+        file_str += "#define " + file_name + "PalLen " + str(len(gba_palette) * 2) + "\n"
         file_str += ("\n/**\n" +
                      f" * @brief The array of rgb5 (short) numbers that create {file_name}'s Palette. \n" +
-                     f" * @note The Palette's size is {2**bpp}\n" +
                      " */\n")
-        file_str += "extern const unsigned short " + file_name + "Pal[" + str(2**bpp) + "];\n"
+        file_str += "extern const unsigned short " + file_name + "Pal[" + str(len(gba_palette)) + "];\n"
 
     new_file_name = f"{dest}/" if dest is not None else ""
     new_file_name += file_name + ".h"

@@ -20,6 +20,13 @@ ACCEPTED_OUTPUT_TYPES = {
 def is_power_of_two(n):
   return n > 0 and (n & (n - 1) == 0)
 
+def is_hex(s):
+    try:
+        int(s, 16)
+        return True
+    except ValueError:
+        return False
+
 def main():
     """
     Main entry point for pix2gba.
@@ -38,12 +45,14 @@ def main():
                         help="Specify the output format (Header:h, C:c, Both:b")
     parser.add_argument("-p", "--palette", required=False,
                         help="Specify the palette to use; if blank will pull it from source image")
-    parser.add_argument("-ip", "--include_palette", action="store_true",
+    parser.add_argument("-ip", "--include_palette", required=False, action="store_true",
                         help="Include the palette in the output")
-    parser.add_argument("-gp", "--generate_palette", action="store_true",
+    parser.add_argument("-gp", "--generate_palette", required=False, action="store_true",
                         help="Generate a PNG of the palette used for the input image")
     parser.add_argument("-d", "--destination", required=False,
                         help="Specify the destination directory to create output in")
+    parser.add_argument("-t", "--transparent", required=False, type=str,
+                        help="Specify the transparent RGB15 color to use; if blank will default to 0x5D53")
 
     raw_args = parser.parse_args()
 
@@ -86,6 +95,18 @@ def main():
         print("ERROR: Output type is not accepted (acceptable are `both`, `c`, `h`)")
         exit(1)
 
+    # Color Checking
+    if raw_args.transparent is not None: #If provided
+        if not is_hex(raw_args.transparent): #Check if can be turned into hex
+            print("ERROR: Transparent RGB15 color is not hex")
+            exit(1)
+        if int(raw_args.transparent, 16) > 0x7FFF:
+            print("ERROR: Transparent RGB15 color is not a valid color (max value is 0x7FFF)")
+            exit(1)
+        raw_args.transparent = int(raw_args.transparent, 16)
+    else: # If not provided then set to default
+        raw_args.transparent = 0x5D53
+
     args = {
         # Base img
         "image_path" : raw_args.input,
@@ -94,6 +115,7 @@ def main():
         "meta_width" : raw_args.meta_width,
         "meta_height" : raw_args.meta_height,
         "bpp" : raw_args.bpp,
+        "transparent" : raw_args.transparent,
 
         # Palette input
         "palette_path" : raw_args.palette,

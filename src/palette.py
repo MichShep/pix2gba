@@ -2,14 +2,32 @@ from PIL import Image as PILImage
 import gba_utils as gf
 import numpy as np
 
-MAGENTA = 0x5d53
+def float_transparent_color(gba_palette:list, transparent:int) -> list:
+    """
+    Will take the transparent color and will force it to be the first color in palette.
+    The old first color will become the last color.
+    :param gba_palette: The current palette of the input image.
+    :param transparent: The RGB15 value of the transparent color.
+    :return: The palette with the transparent color at index 0
+    """
+    old_first = gba_palette[0] if len(gba_palette) > 0 else None
 
+    if transparent in gba_palette:
+        gba_palette.remove(transparent)
 
-def extract_palette_img(filename:str, bpp:int) -> list:
+    gba_palette.insert(0, transparent)
+
+    if old_first is not None and old_first != transparent:
+        gba_palette.append(old_first)
+
+    return gba_palette
+
+def extract_palette_img(filename:str, bpp:int, transparent:int) -> list:
     """
     Extract a GBA palette directly from an image where each pixel represents
     a palette entry.
 
+    :param transparent: The RGB15 value of the transparent color
     :param filename: Path to the palette image file.
     :param bpp: Bits per pixel; palette size is 2^bpp.
     :return: List of GBA RGB15 palette entries.
@@ -30,22 +48,22 @@ def extract_palette_img(filename:str, bpp:int) -> list:
             )
 
     # Force magenta as palette index 0 (transparency key)
-    gba_palette[0] = MAGENTA
+    float_transparent_color(gba_palette, transparent)
 
     return gba_palette
 
 
-def palette_from_img(filename:str, bpp:int) -> list:
+def palette_from_img(filename:str, bpp:int, transparent:int) -> list:
     """
     Generate a GBA palette from an image by selecting the most frequently
     used colors and enforcing GBA palette constraints.
 
     :param filename: Path to the source image file.
     :param bpp: Bits per pixel; palette size is 2^bpp.
+    :param transparent: The RGB15 value of the transparent color
     :return: List of GBA RGB15 palette entries.
     """
     img = PILImage.open(filename).convert("RGB")
-    width, height = img.size
 
     colors = img.getcolors()
     colors.sort(key=lambda c: c[0], reverse=True)
@@ -55,15 +73,7 @@ def palette_from_img(filename:str, bpp:int) -> list:
 
     gba_palette = list(set(gba_palette))
 
-    old_first = gba_palette[0] if len(gba_palette) > 0 else None
-
-    if MAGENTA in gba_palette:
-        gba_palette.remove(MAGENTA)
-
-    gba_palette.insert(0, MAGENTA)
-
-    if old_first is not None and old_first != MAGENTA:
-        gba_palette.append(old_first)
+    float_transparent_color(gba_palette, transparent)
 
     gba_palette = gba_palette[:2**bpp]
 

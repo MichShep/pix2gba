@@ -16,12 +16,14 @@ def run_conversion(args: dict) -> None:
     if args["palette_path"]:
         gba_palette = palette.extract_palette_img(
             filename=args["palette_path"],
-            bpp=args["bpp"]
+            bpp=args["bpp"],
+            transparent=args["transparent"]
         )
     else:
         gba_palette = palette.palette_from_img(
             filename=args["image_path"],
-            bpp=args["bpp"]
+            bpp=args["bpp"],
+            transparent=args["transparent"]
         )
 
     # Step 2: Create conversion table

@@ -97,7 +97,7 @@ def main():
 
     # Color Checking
     if raw_args.transparent is not None: #If provided
-        if not is_hex(raw_args.transparent): #Check if can be turned into hex
+        if not is_hex(raw_args.transparent): # Check if it can be turned into hex
             print("ERROR: Transparent RGB15 color is not hex")
             exit(1)
         if int(raw_args.transparent, 16) > 0x7FFF:

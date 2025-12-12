@@ -148,7 +148,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
     file_str += "};\n"
 
     if arguments["palette_included"]:
-        file_str += (f"\nconst unsigned short {file_name}Pal[{2**bpp}] "
+        file_str += (f"\nconst unsigned short {file_name}Pal[{len(gba_palette)}] "
                      f"__attribute__((aligned(4))) __attribute__((visibility(\"hidden\")))= \n{{\n")
         for i in range(0, len(gba_palette), 8):
             # Take a slice of 8 elements

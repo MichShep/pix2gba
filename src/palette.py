@@ -1,5 +1,5 @@
 from PIL import Image as PILImage
-import gba_utils as gf
+from .gba_utils import rgb24_to_rgb15, unpack_gba_color
 import numpy as np
 
 def float_transparent_color(gba_palette:list, transparent:int) -> list:
@@ -44,7 +44,7 @@ def extract_palette_img(filename:str, bpp:int, transparent:int) -> list:
         for i in range(width):
             pxl = img.getpixel((i, j))
             gba_palette.append(
-                gf.rgb24_to_rgb15(pxl)
+                rgb24_to_rgb15(pxl)
             )
 
     # Force magenta as palette index 0 (transparency key)
@@ -69,7 +69,7 @@ def palette_from_img(filename:str, bpp:int, transparent:int) -> list:
     colors.sort(key=lambda c: c[0], reverse=True)
 
     top_col = [color for count, color in colors[:2**bpp]]
-    gba_palette = [gf.rgb24_to_rgb15(color) for color in top_col]
+    gba_palette = [rgb24_to_rgb15(color) for color in top_col]
 
     gba_palette = list(set(gba_palette))
 
@@ -89,9 +89,9 @@ def closest_gba_color(color:int, gba_palette:list) -> int:
     :param gba_palette: List of GBA RGB15 palette entries.
     :return: Index of the closest matching palette color.
     """
-    target = gf.unpack_gba_color(color)
+    target = unpack_gba_color(color)
     colors = np.array(
-        [gf.unpack_gba_color(c) for c in gba_palette],
+        [unpack_gba_color(c) for c in gba_palette],
         dtype=np.int16
     )
 
@@ -114,7 +114,7 @@ def create_conversion_table(input_img, gba_palette):
     img24_to_gba15 = {}
 
     for junk, color in img_palette:
-        gba_col = gf.rgb24_to_rgb15(color)
+        gba_col = rgb24_to_rgb15(color)
 
         closest_idx = closest_gba_color(gba_col, gba_palette)
         img24_to_gba15[gba_col] = closest_idx

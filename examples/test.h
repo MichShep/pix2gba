@@ -4,12 +4,12 @@
 //======================================================================
 //	test, 200pxl by 200pxl @ 4bpp
 //	+ Number of Tiles : 625
-//	+ Metatile Shape  : 1w by 1h
-//	+ Dimensions in MT: 25w by 25h
+//	+ Metatile Shape  : 5w by 5h
+//	+ Dimensions in MT: 5w by 5h
 //	+ Number of Bytes : 20000
 //	+ Number of U32   : 5000
 //	+ Blank Color     : 0x5d53
-//	2025-12-12 00:37:17.893529
+//	2025-12-12 04:26:03.429586
 //======================================================================
 
 /**

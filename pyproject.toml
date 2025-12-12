@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pix2gba"
+version = "0.2.0"
+description = "PNG to GBA asset compiler"
+requires-python = ">=3.9"
+
+[tool.setuptools]
+packages = ["src"]
+
+[project.scripts]
+pix2gba = "src.cli:main"

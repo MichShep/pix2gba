@@ -1,11 +1,9 @@
 import os
-
-from django.template.defaultfilters import upper
-
-import gba_utils as gf
 from PIL import Image as PILImage
 from datetime import datetime
-import tile_creator
+
+from .gba_utils import rgb15_to_rgb888
+from .tile_creator import create_tile_data
 
 LoadedImage = PILImage.Image
 
@@ -124,7 +122,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
     file_path = arguments["image_path"]
 
     # Make the Top Comments
-    final_array = tile_creator.create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp)
+    final_array = create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp)
     file_name = get_filename_from_path(file_path)
 
     # Data Size Calc
@@ -183,7 +181,7 @@ def create_palette_png(file_path:str, gba_pal:list, dest:str, bpp:int):
             if i*side_length+j >= len(gba_pal):
                 break_out = True
                 break
-            pal_img.putpixel((j, i), gf.rgb15_to_rgb888(gba_pal[i*side_length+j]))
+            pal_img.putpixel((j, i), rgb15_to_rgb888(gba_pal[i*side_length+j]))
         if break_out:
             break
 
@@ -211,7 +209,7 @@ def make_output(arguments:dict, conversion_table:dict, gba_palette:list) -> None
         create_c_file(arguments, img, conversion_table, gba_palette)
 
     if arguments["generate_palette"]:
-        print("* Creating Palette PNG Preview...")
+        #print("* Creating Palette PNG Preview...")
         create_palette_png(
             gba_pal=gba_palette,
             dest=arguments["destination_path"],

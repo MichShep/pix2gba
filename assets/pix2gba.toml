@@ -1,0 +1,38 @@
+[graphics]
+bpp = 4
+transparent = "0x5D53"
+output_type = "both"
+destination = "./examples"
+generate_palettes = 1
+
+[[unit]]
+name = "test"
+metatile_width = 5
+metatile_height = 5
+palette = ""
+palette_include = 1
+
+
+[[unit]]
+name = "I_1"
+metatile_width = 4
+metatile_height = 4
+palette = ""
+palette_include = 0
+
+
+[[unit]]
+name = "I_2"
+metatile_width = 4
+metatile_height = 4
+palette = ""
+palette_include = 0
+
+
+[[unit]]
+name = "I_3"
+metatile_width = 4
+metatile_height = 4
+palette = ""
+palette_include = 0
+

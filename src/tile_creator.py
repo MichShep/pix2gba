@@ -1,6 +1,7 @@
 from PIL import Image as PILImage
 import math
-import gba_utils as gf
+
+from .gba_utils import rgb24_to_rgb15
 
 def create_tile_data(file_path:str, conversion_table:dict, meta_w:int, meta_h:int, bpp:int) -> list:
     """
@@ -54,7 +55,7 @@ def create_tile_data(file_path:str, conversion_table:dict, meta_w:int, meta_h:in
                 word = 0
                 for x in range(pixels_per_u32):
                     px = img.getpixel((x + x_offset + line_offset, y + y_offset))
-                    idx = conversion_table[gf.rgb24_to_rgb15(px)]
+                    idx = conversion_table[rgb24_to_rgb15(px)]
                     shift = bpp * x
                     word |= (idx << shift)
                 line_offset += pixels_per_u32

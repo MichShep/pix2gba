@@ -4,28 +4,9 @@ A Python-based tool for converting standard image formats (PNG, JPEG) into GBA-c
 
 ## Introduction
 
-`pix2gba` is a command-line utility that transforms raster images into assets usable on the Game Boy Advance (GBA). It generates `.c` and `.h` files containing tile and palettes data in formats compatible with GBA development tools. It supports configurable bit depths, metatile dimensions, and both custom and auto-generated palettes. It can also output a visual preview of the generated palette.
+`pix2gba` is a tile and palette converter designed for Game Boy Advance development. It is used to generate `.c` and `.h` files from images based on configuration stored in TOML files. The tool supports multiple conversion units per project and is well-suited for automation or large asset pipelines.
 
-## Project Structure
-
-```
-pix2gba/
-├── Readme.md
-├── assets/
-│   └── test.png                  # Sample input image
-├── examples/
-│   ├── test.c                    # Example output C file
-│   ├── test.h                    # Example output header
-│   └── test_palette.png          # Preview of the generated palette
-├── requirements.txt              # Python dependencies
-└── src/
-    ├── cli.py                    # CLI definition and argument parsing
-    ├── converter.py              # Conversion workflow
-    ├── gba_utils.py              # Color utilities (RGB<->GBA format)
-    ├── palette.py                # Palette generation and mapping
-    ├── tile_creator.py           # Tile and metatile conversion logic
-    └── tile_output.py            # Output .c/.h file generation
-```
+This updated version uses a declarative configuration model (via `pix2gba.toml`) and can be run using simple system commands.
 
 ## Installation
 
@@ -42,115 +23,212 @@ cd pix2gba
 pip install -r requirements.txt
 ```
 
-## Usage
+3. Optionally, set it up as a CLI tool (if structured as a Python package):
 
 ```bash
-python3 src/cli.py -i assets/test.png -mw 2 -mh 2 -bpp 4 -o both -d examples/ -ip -gp
+pip install -e .
 ```
 
-### CLI Arguments
+## Usage
 
-| Argument              | Type    | Description | Required |
-|------------------------|---------|-------------| ---|
-| `-i, --input`          | Path    | Path to the input image (PNG, JPG)                                            | `True`
-| `-mw, --meta_width`    | Integer | Width of each metatile in number of 8×8 tiles                               | `True`
-| `-mh, --meta_height`   | Integer | Height of each metatile in number of 8×8 tiles                              | `True`
-| `-bpp, --bpp`          | Integer | Bits per pixel (e.g., 4 or 8). Must be a power of two                       | `True`
-| `-p, --palette`        | Path    | Optional custom palette image                                               | `False`
-| `-d, --destination`    | Path    | Directory to save output files                                              | `False`
-| `-o, --output`         | Path    | Output format: `h`, `c`, or `both`                                          | `True`
-| `-ip, --include_palette` | Flag    | Include palette in header and source output                                 | `False`
-| `-gp, --generate_palette` | Flag    | Save a PNG visualization of the palette                                     | `False`
-| `-t, --transparent`    | RGB15   | RGB15 Color to use as the transparent color (must be in index 0 of palette) | `False`
+You can use `pix2gba` through the following commands:
+
+```bash
+pix2gba make      # or 'build' to convert assets
+pix2gba clean     # removes generated files
+pix2gba template  # (optional) to generate sample configs
+```
+
+### Command Summary
+
+| Command   | Description                                  |
+|-----------|----------------------------------------------|
+| `make`    | Converts all defined units in `pix2gba.toml` |
+| `build`   | Alias for `make`                             |
+| `clean`   | Deletes all previously generated output files|
+| `template`| Reserved for generating template configs     |
+
+## TOML Configuration
+
+### How to Set It Up
+
+1. **Create a `pix2gba.toml` file** in each folder where your images are located.
+2. Each TOML file defines conversion rules for that specific directory.
+3. You can have multiple TOML files across your project to group image conversions logically.
+4. When you run `pix2gba make` or `pix2gba build` from the root directory, it will:
+   - **Recursively search** all subdirectories for `pix2gba.toml` files
+   - Apply conversion to every unit defined in each discovered TOML
+5. Ensure the image filenames (without `.png`) match the `name` field in each `[[unit]]`.
+6. The tool will generate output files (`.c`, `.h`, and optionally `.png`) in the specified `destination` directory.
+
+**Example directory structure:**
+
+```
+project-root/
+├── sprites/
+│   ├── enemy.png
+│   ├── player.png
+│   └── pix2gba.toml
+├── backgrounds/
+│   ├── level1.png
+│   ├── level2.png
+│   └── pix2gba.toml
+└── pix2gba/
+    ├── src/
+    └── ...
+```
+
+Then, from `project-root`, simply run:
+
+```bash
+pix2gba make
+```
+
+All `pix2gba.toml` files in `sprites/`, `backgrounds/`, etc. will be discovered and processed.
+
+
+The `pix2gba.toml` file defines the global settings and individual conversion units.
+
+### Example
+
+```toml
+[graphics]
+bpp = 4
+transparent = "0x5D53"
+output_type = "both"
+destination = "./examples"
+generate_palettes = 1
+
+[[unit]]
+name = "sprite1"
+metatile_width = 5
+metatile_height = 5
+palette = ""
+palette_include = 1
+
+[[unit]]
+name = "sprite2"
+metatile_width = 4
+metatile_height = 4
+palette = ""
+palette_include = 0
+```
+
+### [graphics] section
+
+| Key              | Type   | Description |
+|------------------|--------|-------------|
+| `bpp`            | int    | Bits per pixel (4 or 8 typically) |
+| `transparent`    | str    | RGB15 hex value for transparent color (e.g., `"0x5D53"`) |
+| `output_type`    | str    | Output format: `"h"`, `"c"`, or `"both"` |
+| `destination`    | path   | Output directory for generated files |
+| `generate_palettes` | bool | Whether to export a PNG palette file (0 or 1) |
+
+### [[unit]] section
+
+Each `unit` represents a single image to convert.
+
+| Key                 | Type | Description |
+|---------------------|------|-------------|
+| `name`             | str  | Name of the image file (without `.png`)                 |
+| `metatile_width`   | int  | Number of 8x8 tiles per metatile width                  |
+| `metatile_height`  | int  | Number of 8x8 tiles per metatile height                 |
+| `palette`          | path | Path to a custom palette image or `""` to auto-generate |
+| `palette_include`  | bool | Whether to embed the palette in the output (0 or 1) |
 
 ## Features
 
 - Converts standard images to GBA-compatible tile data
 - Supports 4bpp and 8bpp modes
 - Automatic or user-specified palettes
-- Palette visualization as PNG
 - Configurable metatile sizes
-- Outputs `.h` and `.c` files for easy inclusion in GBA projects
+- Outputs `.h` and `.c` files
+- PNG preview of the palette
 
 ## Technical Concepts
 
 ### Bits Per Pixel (BPP)
 
-BPP defines how many bits are used to represent each pixel:
+BPP (Bits Per Pixel) determines how many bits are used to represent a single pixel in the image data. In the context of the GBA:
 
-- 4 BPP = 16 colors per tile (uses 4 bits per pixel)
-- 8 BPP = 256 colors per tile (uses 8 bits per pixel)
+- **4 BPP** means each pixel can use 4 bits (0–15), allowing up to **16 colors** from a palette.
+- **8 BPP** allows 8 bits per pixel (0–255), supporting **256 colors**.
+- GBA tile rendering in 4bpp or 8bpp is handled differently in hardware; 4bpp is more memory-efficient but limited in color.
 
-Higher BPP allows more colors per tile but consumes more memory.
+The `bpp` value also determines the size of the generated palette (`2^bpp`) and how tile data is packed into memory.
+
+---
 
 ### Palettes
 
-A palette is a lookup table of colors. In the GBA:
+A **palette** is a set of predefined colors indexed by tile pixels. On the GBA:
 
-- Colors are stored in 15-bit RGB format (5 bits per channel)
-- A tile references its color by index into the palette
-- `pix2gba` can auto-generate a palette from the image or use a provided one
-- Index 0 is reserved for transparency and is forced to magenta (0x5D53) if not specified by `--transparent`
+- Each tile pixel does **not** store a color, only an index into a palette.
+- Palettes are in **RGB15** format: 5 bits per channel (R, G, B), packed into 16-bit values.
+- Palette entry 0 is typically used for transparency. The tool supports setting a specific transparent color via the `transparent` key in the TOML.
+- You can either:
+  - Auto-generate a palette from the input image, selecting the most common colors.
+  - Provide your own palette image (each pixel = 1 color).
+
+The output `.c` and `.h` files will include this palette data if `palette_include = 1`.
+
+---
 
 ### Tiles
 
-- A tile is an 8x8 pixel block, the base unit for GBA graphics.
-- Each pixel in a tile refers to a color index in the palette.
-- Tiles are used in backgrounds, sprites, and UI elements.
+- Tiles are **8x8 pixel** squares – the basic unit of GBA graphics.
+- Each tile is encoded as an array of pixel indices into the palette (not raw colors).
+- Tiles are used across:
+  - **Background layers** (BG0–BG3)
+  - **Sprites (OBJs)**
+
+Tile data is tightly packed and aligned in VRAM, and can be stored in different formats based on the BPP.
+
+---
 
 ### Metatiles
 
-A metatile is a larger logical structure made up of multiple tiles.
+A **metatile** is a logical grouping of smaller 8x8 tiles into a larger structure, like:
 
-For example, a 2x2 metatile consists of 4 tiles (each 8×8), forming a 16×16 graphic unit.
+- **2x2 tiles = 16x16 metatile**
+- **4x3 tiles = 32x24 metatile**
 
-#### Benefits:
+Why use metatiles?
 
-- Helps reuse patterns more efficiently (tilemaps reference metatiles instead of raw tiles)
-- Simplifies level design or sprite grouping
+- **Level design**: Backgrounds often reuse larger blocks to build maps (e.g., a corner, a wall).
+- **Efficiency**: Reduces complexity in tilemaps, and helps with memory reuse.
+- **Abstraction**: Designers can work at a higher level (e.g., tilemap of metatiles) instead of managing thousands of individual tiles.
 
-#### Use Cases:
+The tool generates data based on your metatile size settings (`metatile_width`, `metatile_height`), and pads your images as necessary to match these dimensions.
 
-- Backgrounds: Metatiles can map entire tilemaps, making scrolling and map editing more manageable.
-- Sprites: Large or composite sprites can be built from multiple tiles as metatiles.
+---
 
-## Examples
+### Output Format
 
-Sample conversion command:
+- `.h` files include:
+  - Tile length
+  - Palette length
+  - Extern declarations for tile and palette arrays
+- `.c` files include:
+  - Packed tile data in `unsigned int` arrays
+  - Optional palette data in `unsigned short` arrays
+- `.png` preview of the palette (if enabled)
 
-```bash
-python3 src/cli.py -i assets/test.png -mw 2 -mh 2 -bpp 4 -o both -d examples/ -ip -gp
-```
+All output respects alignment and visibility attributes needed for GBA toolchains.
 
-This will:
-- Convert `test.png` into 4bpp tile data
-- Use 2x2 metatiles
-- Generate both `.h` and `.c` files
-- Include the palette
-- Output the results to the `examples/` directory
-- Save a preview of the palette as `test_palette.png`
-
-## Dependencies
-
-- Pillow - Image handling and manipulation
-- NumPy - Efficient color distance calculations
-
-Install them with:
-
-```bash
-pip install -r requirements.txt
-```
 
 ## Troubleshooting
 
-Here are some general issues you might encounter and how to resolve them:
+Common issues and how to address them:
 
-- **Input image does not exist**: Double-check the file path and ensure the image file is in the specified location.
-- **Input image type is not accepted**: Only PNG and JPG/JPEG formats are supported.
-- **Meta tile dimensions must be >= 1**: Make sure you use postive integers for `--meta_width` and `--meta_height`.
-- **Invalid BPP value**: Valid values are powers of two (e.g., 1, 2, 4, or 8). The most common are 4 and 8.
-- **Output directory errors**: The destination directory must exist and be a valid directory.
-- **Palette file errors**: If a custom palette is used, it must be a valid image file and follow the format requirements (1 pixel per color, with total count matching `2^bpp`).
-- **Out-of-bounds errors**: Ensure the image dimensions are compatible with the chosen metatile sizes. The tool pads the image to align with 8×8 tiles if needed.
-- **File permissions**: Make sure you have write access to the destination directory.
-- **Invalid transparent Color:** Make sure the value is RGB15, not RGB24
+- **Image not found**: Ensure the `.png` file exists and is named correctly (no extension in the TOML).
+- **Palette not found**: If a palette is specified, it must also be a `.png` file.
+- **Invalid BPP**: Only values like `4` or `8` (powers of two) are accepted.
+- **Transparent color invalid**: Must be a valid RGB15 hex (e.g., `0x1F1F`) and below `0x7FFF`.
+- **Output directory errors**: Make sure the `destination` path exists and is a directory.
+- **Padding or alignment issues**: Images that don’t align with metatile sizes will be automatically padded.
+- **No output generated**: Ensure you’re in the correct directory and that your TOML file is named `pix2gba.toml`.
+
+## License
+
+This project is licensed under the MIT License.

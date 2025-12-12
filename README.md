@@ -1,4 +1,5 @@
-# pix2gba
+
+# <img width="48" height="48" alt="test" src="https://github.com/user-attachments/assets/862f43fe-9ece-438e-8cbe-38c8fbda850a" />   pix2gba
 
 A Python-based tool for converting standard image formats (PNG, JPEG) into GBA-compatible tile data, palettes, and headers for use in GBA homebrew development.
 
@@ -32,7 +33,7 @@ pix2gba/
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/pix2gba.git
+git clone https://github.com/MichShep/pix2gba.git
 cd pix2gba
 ```
 
@@ -53,8 +54,8 @@ python3 src/cli.py -i assets/test.png -mw 2 -mh 2 -bpp 4 -o both -d examples/ -i
 | Argument              | Description |
 |-----------------------|-------------|
 | `-i, --input`         | Path to the input image (PNG, JPG) |
-| `-mw, --meta_width`   | Width of each metatile in number of 8×8 tiles |
-| `-mh, --meta_height`  | Height of each metatile in number of 8×8 tiles |
+| `-mw, --meta_width`   | Width of each metatile in number of 8x8 tiles |
+| `-mh, --meta_height`  | Height of each metatile in number of 8x8 tiles |
 | `-bpp, --bpp`         | Bits per pixel (e.g., 4 or 8). Must be a power of two |
 | `-o, --output`        | Output format: `h`, `c`, or `both` |
 | `-p, --palette`       | Optional custom palette image |
@@ -101,7 +102,7 @@ A palette is a lookup table of colors. In the GBA:
 
 A metatile is a larger logical structure made up of multiple tiles.
 
-For example, a 2x2 metatile consists of 4 tiles (each 8×8), forming a 16×16 graphic unit.
+For example, a 2x2 metatile consists of 4 tiles (each 8x8), forming a 16x16 graphic unit.
 
 #### Benefits:
 
@@ -150,5 +151,5 @@ Here are some general issues you might encounter and how to resolve them:
 - **Invalid BPP value**: Valid values are powers of two (e.g., 1, 2, 4, or 8). The most common are 4 and 8.
 - **Output directory errors**: The destination directory must exist and be a valid directory.
 - **Palette file errors**: If a custom palette is used, it must be a valid image file and follow the format requirements (1 pixel per color, with total count matching `2^bpp`).
-- **Out-of-bounds errors**: Ensure the image dimensions are compatible with the chosen metatile sizes. The tool pads the image to align with 8×8 tiles if needed.
+- **Out-of-bounds errors**: Ensure the image dimensions are compatible with the chosen metatile sizes. The tool pads the image to align with 8x8 tiles if needed.
 - **File permissions**: Make sure you have write access to the destination directory.

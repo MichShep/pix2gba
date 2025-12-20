@@ -116,7 +116,7 @@ def validate_unit(unit: ConversionUnit) -> bool:
 
     pal_path = Path(unit.config.root_dir / unit.palette_path).with_suffix(".png")
     if unit.palette_path != "":  # Only check palette if one was provided
-        if not pal_path.exists():
+        if not Path(unit.palette_path).exists():
             print(f"ERROR: Palette path does not exist: `{unit.palette_path}`")
             return True
 
@@ -130,7 +130,7 @@ def validate_unit(unit: ConversionUnit) -> bool:
 
 def create_unit_args(unit: ConversionUnit) -> dict:
     input_path = Path(unit.config.root_dir / unit.name).with_suffix(".png")
-    palette_path = Path(unit.config.root_dir / unit.palette_path).with_suffix(".png")
+    palette_path = Path(unit.palette_path)
 
     if unit.config.transparent != "": #already been verified
         transparent_int = int(unit.config.transparent, 16)

@@ -160,7 +160,7 @@ Each `unit` represents a single image to convert.
   - Optional palette data in `unsigned short` arrays
   - Tiles are stored in a 1d stream (see figure below)
 - `.png` preview of the palette (if enabled)
-- 
+
 ![example_stream.png](example_stream.png)
 
 All output respects alignment and visibility attributes needed for GBA toolchains.

@@ -14,7 +14,7 @@ def rgb24_to_rgb15(color: tuple[int, int, int]) -> int:
     return gba_val
 
 
-def rgb24_to_hex(color: tuple[int, int, int]) -> str:
+def rgb888_to_hex(color: tuple[int, int, int]) -> str:
     """
     :param color: tuple[int, int, int]
     :return: str

@@ -24,7 +24,7 @@ def discover_build_roots(root: Path) -> list[Path]:
 
     return results
 
-def _build_config(toml_data, root_dir:Path):
+def _build_config(toml_data, root_dir:Path) -> ConversionConfig:
     return ConversionConfig(
         bpp=toml_data["graphics"]["bpp"],
 
@@ -38,7 +38,7 @@ def _build_config(toml_data, root_dir:Path):
         generate_palette=toml_data["graphics"]["generate_palettes"],
     )
 
-def _build_unit(element_data, config:ConversionConfig):
+def _build_unit(element_data, config:ConversionConfig) -> ConversionUnit:
     return ConversionUnit(
         config=config,
         name=element_data["name"],
@@ -58,31 +58,33 @@ def _is_hex(s):
     except Exception:
         return False
 
-def _validate_config(config: ConversionConfig):
+def _validate_config(config: ConversionConfig) -> bool:
     if not os.path.exists(config.output_dir):
         print(f"ERROR: Output directory does not exist:  `{config.output_dir}`")
-        exit(1)
+        return True
     if not os.path.isdir(config.output_dir):
         print(f"ERROR: Output directory is not a directory: `{config.output_dir}`")
-        exit(1)
+        return True
 
     if not _is_power_of_two(config.bpp):
         print(f"ERROR: Bpp is not power of two: {config.bpp}")
-        exit(1)
+        return True
 
     # Output Type checking
     if config.output_type not in ACCEPTED_OUTPUT_TYPES:
         print(f"ERROR: Output type is not accepted (acceptable are `both`, `c`, `h`): `{config.output_type}`")
-        exit(1)
+        return True
 
     # Color Checking
     if config.transparent != "": #If provided
         if not _is_hex(config.transparent): # Check if it can be turned into hex
             print(f"ERROR: Transparent RGB15 color is not hex: `{config.transparent}`")
-            exit(1)
+            return True
         if int(config.transparent, 16) > 0x7FFF:
             print(f"ERROR: Transparent RGB15 color is not a valid color (max value is 0x7FFF): `{config.transparent}`")
-            exit(1)
+            return True
+
+    return False
 
 def build_units(build_roots: list[Path]) -> list[ConversionUnit]:
     build_units: list[ConversionUnit] = []
@@ -95,7 +97,8 @@ def build_units(build_roots: list[Path]) -> list[ConversionUnit]:
 
         # Create and validate the config
         config = _build_config(toml_data, build_root)
-        _validate_config(config)
+        if _validate_config(config): # Evaluates to true if it failed
+            exit(1)
 
         # Go through each element in toml and build the unit
         for element in toml_data["unit"]:
@@ -104,26 +107,28 @@ def build_units(build_roots: list[Path]) -> list[ConversionUnit]:
 
     return build_units
 
-def validate_units(unit: ConversionUnit):
+def validate_unit(unit: ConversionUnit) -> bool:
     # File checking
     img_path = Path(unit.config.root_dir / unit.name).with_suffix(".png")
     if not img_path.exists():
         print(f"ERROR: Input image `{img_path}` does not exist")
-        exit(1)
+        return True
 
     pal_path = Path(unit.config.root_dir / unit.palette_path).with_suffix(".png")
     if unit.palette_path != "":  # Only check palette if one was provided
         if not pal_path.exists():
             print(f"ERROR: Palette path does not exist: `{unit.palette_path}`")
-            exit(1)
+            return True
 
     # Number checking
     if unit.metatile_height < 1 or unit.metatile_width < 1:
         print(f"ERROR: Meta tile height/width must be greater than or equal to 1: "
               f"mh=`{unit.metatile_height}`, mh=`{unit.metatile_width}`")
-        exit(1)
+        return True
 
-def convert_unit(unit: ConversionUnit):
+    return False
+
+def create_unit_args(unit: ConversionUnit) -> dict:
     input_path = Path(unit.config.root_dir / unit.name).with_suffix(".png")
     palette_path = Path(unit.config.root_dir / unit.palette_path).with_suffix(".png")
 
@@ -156,6 +161,11 @@ def convert_unit(unit: ConversionUnit):
         "output_type": unit.config.output_type,
     }
 
+    return args
+
+def convert_unit(unit: ConversionUnit):
+    args = create_unit_args(unit)
+
     run_conversion(args)
 
 def clean_unit(unit: ConversionUnit):
@@ -183,3 +193,23 @@ def clean_unit(unit: ConversionUnit):
     }
 
     clean_conversion(args)
+
+def find_unit(build_roots: list[Path], unit_name:str) -> ConversionUnit:
+    # Go through each root and load in config
+    for build_root in build_roots:
+        # Load in toml data
+        toml_file = build_root / "pix2gba.toml"
+        toml_data = toml.load(toml_file)
+
+        # Create and validate the config
+        config = _build_config(toml_data, build_root)
+        if _validate_config(config): # Evaluates to true if it failed
+            exit(1)
+
+        # Go through each element in toml and build the unit
+        for element in toml_data["unit"]:
+            if element["name"] == unit_name:
+                return _build_unit(element, config)
+
+    print(f"ERROR: Unit does not exist: `{unit_name}`")
+    exit(1)

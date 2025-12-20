@@ -1,5 +1,7 @@
 import argparse
-from .api import build_outputs, clean_outputs, make_template
+from cgi import parse
+
+from .api import build_outputs, clean_outputs, make_template, view_output
 
 def main():
     """
@@ -10,8 +12,7 @@ def main():
 
     parser.add_argument('command_name', type=str, help='Command of pix2gba to run')
 
-    raw_args = parser.parse_args()
-
+    raw_args, raw_extra = parser.parse_known_args()
     if raw_args.command_name == 'build' or raw_args.command_name == 'make':
         build_outputs()
 
@@ -20,6 +21,16 @@ def main():
 
     elif raw_args.command_name == 'template':
         make_template()
+
+    elif raw_args.command_name == 'view':
+        parser.add_argument('image_name', type=str, help='Name of the image to view')
+
+        if len(raw_extra) == 0:
+            print("ERROR: `view` requires the name of the image file")
+            parser.print_help()
+            exit(1)
+
+        view_output(raw_extra[0])
 
 if __name__ == "__main__":
     main()

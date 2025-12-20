@@ -37,16 +37,19 @@ You can use `pix2gba` through the following commands:
 pix2gba make      # or 'build' to convert assets
 pix2gba clean     # removes generated files
 pix2gba template  # (optional) to generate sample configs
+pix2gba view Img  # View how the image will look on the GBA with the given setup
 ```
 
 ### Command Summary
 
-| Command   | Description                                  |
-|-----------|----------------------------------------------|
-| `make`    | Converts all defined units in `pix2gba.toml` |
-| `build`   | Alias for `make`                             |
-| `clean`   | Deletes all previously generated output files|
-| `template`| Reserved for generating template configs     |
+| Command      | Description                                             |
+|--------------|---------------------------------------------------------|
+| `make`       | Converts all defined units in `pix2gba.toml`            |
+| `build`      | Alias for `make`                                        |
+| `clean`      | Deletes all previously generated output files           |
+| `template`   | Reserved for generating template configs                |
+| `view` `name` | View how a unit will look on the GBA given the data in `pix2gba.toml` |
+
 
 ## TOML Configuration
 
@@ -145,6 +148,24 @@ Each `unit` represents a single image to convert.
 - Outputs `.h` and `.c` files
 - PNG preview of the palette
 
+
+## Output Format
+
+- `.h` files include:
+  - Tile length
+  - Palette length
+  - Extern declarations for tile and palette arrays
+- `.c` files include:
+  - Packed tile data in `unsigned int` arrays
+  - Optional palette data in `unsigned short` arrays
+  - Tiles are stored in a 1d stream (see figure below)
+- `.png` preview of the palette (if enabled)
+- 
+![example_stream.png](example_stream.png)
+
+All output respects alignment and visibility attributes needed for GBA toolchains.
+
+
 ## Technical Concepts
 
 ### Bits Per Pixel (BPP)
@@ -202,20 +223,6 @@ Why use metatiles?
 The tool generates data based on your metatile size settings (`metatile_width`, `metatile_height`), and pads your images as necessary to match these dimensions.
 
 ---
-
-### Output Format
-
-- `.h` files include:
-  - Tile length
-  - Palette length
-  - Extern declarations for tile and palette arrays
-- `.c` files include:
-  - Packed tile data in `unsigned int` arrays
-  - Optional palette data in `unsigned short` arrays
-- `.png` preview of the palette (if enabled)
-
-All output respects alignment and visibility attributes needed for GBA toolchains.
-
 
 ## Troubleshooting
 

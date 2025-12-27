@@ -3,7 +3,7 @@ import math
 
 from .gba_utils import rgb24_to_rgb15
 
-def create_tile_data(file_path:str, conversion_table:dict, meta_w:int, meta_h:int, bpp:int) -> list:
+def create_tile_data(file_path:str, conversion_table:dict, meta_w:int, meta_h:int, bpp:int, hex_out:bool=True) -> list:
     """
     Takes the input image path and based on meta height and width separates them by GBA tiles (8x8 pixels)
     and given a conversion table form rgb24 to rgb15, creates the VRAM data of palette indices.
@@ -12,7 +12,8 @@ def create_tile_data(file_path:str, conversion_table:dict, meta_w:int, meta_h:in
     :param meta_w: Number of tiles one meta tile's width consists of
     :param meta_h: Number of tiles one meta tile's height consists of
     :param bpp: The number of bits per pixel into a palette
-    :return:
+    :param hex_out: If the data should be converted to HEX format
+    :return: A list of the created VRAM data
     """
     img = PILImage.open(file_path).convert("RGB")
     width, height = img.size
@@ -59,7 +60,10 @@ def create_tile_data(file_path:str, conversion_table:dict, meta_w:int, meta_h:in
                     shift = bpp * x
                     word |= (idx << shift)
                 line_offset += pixels_per_u32
-                tile_data_1d.append(f"0x{word:08x}")
+                if hex_out:
+                    tile_data_1d.append(f"0x{word:08x}")
+                else:
+                    tile_data_1d.append(word)
 
             y += 1
             pxl_row_count += 1

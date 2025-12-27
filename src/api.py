@@ -1,4 +1,5 @@
 import os, sys
+import re
 from pathlib import Path
 from PySide6 import QtCore, QtGui, QtWidgets
 from PIL import Image as PILImage
@@ -7,7 +8,8 @@ from .config import discover_build_roots, build_units, validate_unit, convert_un
 from .visualizer import OutputWindow
 from .converter import simulate_conversion
 from .config import clean_unit
-from .units import ConversionStats
+from .units import ConversionStats, VerificationStats
+from .template_output import add_template_file
 
 ROOT_DIRECTORY = Path(os.getcwd())
 
@@ -96,4 +98,82 @@ def view_output(img_name:str):
     app.exec()
 
 def make_template():
-    pass
+    print(f"* Created Template TOML file in {ROOT_DIRECTORY}")
+    add_template_file(ROOT_DIRECTORY)
+
+def _output_verification_stats(stats: VerificationStats) -> None:
+    error_code = [
+        "Null",
+        "Image path does not exist",
+        "Palette path does not exist",
+        "Metatile width and height must be >= 1"
+    ]
+    """
+    Output the final stats of the verification process (how many failed and which ones)
+    :param stats: ConversionStats data struct with final verification statistics
+    :return: None
+    """
+    print("* Final Statistics... ")
+    print(f" \tSuccess rate: {(stats.successful_units / stats.total_units)*100}% ({stats.successful_units}/{stats.total_units})")
+    print(f" \tFailed Verification: ")
+    failed_names = ""
+    for i in range(len(stats.failed_unit_names)):
+        failed_names += f" \t\t{stats.failed_unit_names[i]} : {error_code[stats.unit_error_code[i]]}, "
+
+    print(failed_names[:-2]) # Remove the last ", "
+
+def verify_inputs():
+    print(f"Verifying all units in {ROOT_DIRECTORY}")
+
+    # Fetch all toml files
+    print("* Verifying default configs")
+    build_paths = discover_build_roots(ROOT_DIRECTORY)
+
+    # Build units from toml
+    potential_units = build_units(build_paths)
+
+    # Create statistics tracker
+    stats = VerificationStats(
+        total_units=len(potential_units),
+        successful_units=0,
+        failed_unit_names=[],
+        unit_error_code=[]
+    )
+
+    # Process all units
+    for unit in potential_units:
+        # Validate unit
+        error_code = validate_unit(unit)
+        if error_code:
+            # Add failed name to list
+            stats.failed_unit_names.append(unit.name)
+            stats.unit_error_code.append(error_code)
+            continue
+
+        stats.successful_units += 1
+
+        print()
+
+    _output_verification_stats(stats)
+
+def create_byte_data(img_name:str):
+    # Get all reachable toml files
+    build_paths = discover_build_roots(ROOT_DIRECTORY)
+
+    # Find (and validate) the unit from all toml
+    found_unit = find_unit(build_paths, img_name)
+    validate_unit(found_unit)
+
+    # Create Vizual Data
+    tile_data, pal_data = simulate_conversion(create_unit_args(found_unit))
+
+    # Convert to byte data
+    print("* Converting tile data to bytes")
+    words = re.findall(r'0x[0-9a-fA-F]{8}', str(tile_data))
+
+    with open(f"{img_name}_bytes.bin", "wb") as f:
+        for w in words:
+            v = int(w, 16)
+            f.write(v.to_bytes(4, "little"))
+
+    print("* Done")

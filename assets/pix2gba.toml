@@ -5,36 +5,28 @@ output_type = "both"
 destination = "./examples"
 
 [[unit]]
-name = "test"
-metatile_width = 5
-metatile_height = 5
-palette = ""
-palette_include = 1
-generate_palette = 0
-
-
-[[unit]]
-name = "I_1"
+name = "Sprite1"
 metatile_width = 4
 metatile_height = 4
-palette = ""
-palette_include = 0
+palette = "./assets/Sprite1_pal.png"
+palette_include = 1
 generate_palette = 0
-
+compress = 1
 
 [[unit]]
-name = "I_2"
+name = "Sprite2"
 metatile_width = 4
 metatile_height = 4
 palette = "./faulty_path"
 palette_include = 0
 generate_palette = 1
-
+compress = 0
 
 [[unit]]
-name = "I_3"
+name = "Sprite3"
 metatile_width = 4
 metatile_height = 4
 palette = ""
 palette_include = 0
 generate_palette = 1
+compress = 0

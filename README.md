@@ -1,10 +1,10 @@
 # <img alt="logo.png" height="48" src="logo.png" width="48"/> pix2gba 
 
-A Python-based tool for converting standard image formats (PNG, JPEG) into GBA-compatible tile data, palettes, and headers for use in GBA homebrew development.
+A Python-based tool for converting standard image formats (PNG, JPEG) into GBA-compatible tile data, palettes, headers, and compression for use in GBA homebrew development.
 
 ## Introduction
 
-`pix2gba` is a tile and palette converter designed for Game Boy Advance development. It is used to generate `.c` and `.h` files from images based on configuration stored in TOML files. The tool supports multiple conversion units per project and is well-suited for automation or large asset pipelines.
+`pix2gba` is a tile and palette converter designed for Game Boy Advance development. It is used to generate `.c` and `.h` files from images based on configuration stored in TOML files, with the option to compress the data. The tool supports multiple conversion units per project and is well-suited for automation or large asset pipelines.
 
 This updated version uses a declarative configuration model (via `pix2gba.toml`) and can be run using simple system commands.
 
@@ -23,7 +23,7 @@ cd pix2gba
 pip install -r requirements.txt
 ```
 
-3. Optionally, set it up as a CLI tool (if structured as a Python package):
+3. Optionally, set it up as a CLI tool:
 
 ```bash
 pip install -e .
@@ -34,21 +34,23 @@ pip install -e .
 You can use `pix2gba` through the following commands:
 
 ```bash
-pix2gba make      # or 'build' to convert assets
+pix2gba make      # convert assets
 pix2gba clean     # removes generated files
 pix2gba template  # (optional) to generate sample configs
 pix2gba view Img  # View how the image will look on the GBA with the given setup
+...
 ```
 
 ### Command Summary
 
-| Command      | Description                                             |
-|--------------|---------------------------------------------------------|
-| `make`       | Converts all defined units in `pix2gba.toml`            |
-| `build`      | Alias for `make`                                        |
-| `clean`      | Deletes all previously generated output files           |
-| `template`   | Reserved for generating template configs                |
+| Command       | Description                                                           |
+|---------------|-----------------------------------------------------------------------|
+| `make`        | Converts all defined units in `pix2gba.toml`                          |
+| `clean`       | Deletes all previously generated output files                         |
+| `template`    | Generates an example `pix2gba.toml` in the project root               |
 | `view` `name` | View how a unit will look on the GBA given the data in `pix2gba.toml` |
+| `verify`      | Verifys all units in project can be inputted into GBA Hardware        |
+| `byte` `name`  | Creates a binary file of the unit's converted data in the project root                   |
 
 
 ## TOML Configuration
@@ -58,7 +60,7 @@ pix2gba view Img  # View how the image will look on the GBA with the given setup
 1. **Create a `pix2gba.toml` file** in each folder where your images are located.
 2. Each TOML file defines conversion rules for that specific directory.
 3. You can have multiple TOML files across your project to group image conversions logically.
-4. When you run `pix2gba make` or `pix2gba build` from the root directory, it will:
+4. When you run `pix2gba make` from the root directory, it will:
    - **Recursively search** all subdirectories for `pix2gba.toml` files
    - Apply conversion to every unit defined in each discovered TOML
 5. Ensure the image filenames (without `.png`) match the `name` field in each `[[unit]]`.
@@ -76,8 +78,8 @@ project-root/
 │   ├── level1.png
 │   ├── level2.png
 │   └── pix2gba.toml
-└── pix2gba/
-    ├── src/
+└── src/
+    ├── main.c
     └── ...
 ```
 
@@ -99,7 +101,7 @@ The `pix2gba.toml` file defines the global settings and individual conversion un
 bpp = 4
 transparent = "0x5D53"
 output_type = "both"
-destination = "./examples"
+destination = "./gfx"
 
 [[unit]]
 name = "sprite1"
@@ -113,7 +115,7 @@ generate_palettes = 1
 name = "sprite2"
 metatile_width = 4
 metatile_height = 4
-palette = ""
+palette = "root/pals/pal1.png"
 palette_include = 0
 generate_palettes = 0
 ```
@@ -139,6 +141,7 @@ Each `unit` represents a single image to convert.
 | `palette`          | path | Path to a custom palette image or `""` to auto-generate                       |
 | `palette_include`  | bool | Whether to embed the palette in the output (0 or 1)                           |
 | `generate_palette` | bool | Whether to export a PNG file containing the used palette of the unit (0 or 1) |
+| `compress`         | bool | Whether to compress the resulting tile data                                   |
 
 ## Features
 
@@ -222,6 +225,30 @@ Why use metatiles?
 - **Abstraction**: Designers can work at a higher level (e.g., tilemap of metatiles) instead of managing thousands of individual tiles.
 
 The tool generates data based on your metatile size settings (`metatile_width`, `metatile_height`), and pads your images as necessary to match these dimensions.
+
+---
+
+### Compression
+
+The Game Boy Advance includes a hardware-assisted LZ77 decompressor in its BIOS, making LZ77 the standard compression format for game assets. `pix2gb` can optionally compress tile data using this format to significantly reduce ROM size.
+
+When compression is enabled:
+
+- Tile data is compressed after it has been converted into GBA tile layout and bit-packed format (4bpp or 8bpp).
+
+- The output `.c` file will contain the compressed byte stream instead of raw tile words.
+
+- The `.h` file will expose the compressed size and symbol name so the game can decompress it at runtime.
+
+On the GBA, the data is decompressed using:
+
+```bash
+# If destination is in Vram
+LZ77UnCompVram(compressedTiles, destinationInVRAM);
+
+# If destination is in Wram
+LZ77UnCompWram(compressedTiles, destinationInWRAM);
+```
 
 ---
 

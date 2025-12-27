@@ -4,6 +4,7 @@ import os
 from .palette import extract_palette_img, palette_from_img, create_conversion_table
 from .tile_output import make_output
 from .tile_creator import create_tile_data
+from .compress_output import make_compress_output
 
 def run_conversion(args: dict) -> bool:
     """
@@ -41,12 +42,18 @@ def run_conversion(args: dict) -> bool:
 
     # Step 3: Generate .h and/or .c output
     #print("* Generating C/Header Output...")
-    make_output(
-        arguments=args,
-        conversion_table=conversion_table,
-        gba_palette=gba_palette
-    )
-
+    if args["compress"]:
+        make_compress_output(
+            arguments=args,
+            conversion_table=conversion_table,
+            gba_palette=gba_palette
+        )
+    else:
+        make_output(
+            arguments=args,
+            conversion_table=conversion_table,
+            gba_palette=gba_palette
+        )
 
     print("* Done.\n")
 

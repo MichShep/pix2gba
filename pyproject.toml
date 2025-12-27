@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pix2gba"
-version = "0.2.0"
-description = "PNG to GBA asset compiler"
+version = "0.3.0"
+description = "PNG to GBA asset converter"
 requires-python = ">=3.9"
 
 [tool.setuptools]

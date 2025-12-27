@@ -147,7 +147,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
 
     if arguments["palette_included"]:
         file_str += (f"\nconst unsigned short {file_name}Pal[{2**bpp}] "
-                     f"__attribute__((aligned(4))) __attribute__((visibility(\"hidden\")))= \n{{\n")
+                     f"__attribute__((aligned(2))) __attribute__((visibility(\"hidden\")))= \n{{\n")
         for i in range(0, len(gba_palette), 8):
             # Take a slice of 8 elements
             line = gba_palette[i:i + 8]
@@ -194,6 +194,7 @@ def create_palette_png(file_path:str, gba_pal:list, dest:str, bpp:int):
 def make_output(arguments:dict, conversion_table:dict, gba_palette:list) -> None:
     """
     Creates the output files that the user indicated as wanted
+    :rtype: object
     :param arguments: Dictionary of command line arguments
     :param conversion_table: Dictionary of rgb24 colors to rgb15 colors (native GBA color)
     :param gba_palette: The 2^bpp wide palette for the image (palette that will be in the GBA)

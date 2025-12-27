@@ -56,7 +56,8 @@ def _build_unit(element_data, config:ConversionConfig) -> ConversionUnit:
         metatile_height=element_data["metatile_height"],
         palette_path=element_data["palette"],
         palette_include=element_data["palette_include"],
-        generate_palette=element_data["generate_palette"]
+        generate_palette=element_data["generate_palette"],
+        compress=element_data["compress"]
     )
 
 def _is_power_of_two(n):
@@ -118,7 +119,7 @@ def build_units(build_roots: list[Path]) -> list[ConversionUnit]:
 
     return build_units
 
-def validate_unit(unit: ConversionUnit) -> bool:
+def validate_unit(unit: ConversionUnit) -> int:
     file_name = unit.name
     input_dir = unit.config.root_dir
     print(f"* Validating {file_name}... in {input_dir}")
@@ -126,21 +127,21 @@ def validate_unit(unit: ConversionUnit) -> bool:
     img_path = Path(unit.config.root_dir / unit.name).with_suffix(".png")
     if not img_path.exists():
         _print_red(f"ERROR: Input image `{img_path}` does not exist\n")
-        return True
+        return 1
 
     pal_path = Path(unit.config.root_dir / unit.palette_path).with_suffix(".png")
     if unit.palette_path != "":  # Only check palette if one was provided
         if not Path(unit.palette_path).exists():
             _print_red(f"ERROR: Palette path does not exist: `{unit.palette_path}`\n")
-            return True
+            return 2
 
     # Number checking
     if unit.metatile_height < 1 or unit.metatile_width < 1:
         _print_red(f"ERROR: Meta tile height/width must be greater than or equal to 1: "
               f"mh=`{unit.metatile_height}`, mh=`{unit.metatile_width}`\n")
-        return True
+        return 3
 
-    return False
+    return 0 # 0 is no error
 
 def create_unit_args(unit: ConversionUnit) -> dict:
     input_path = Path(unit.config.root_dir / unit.name).with_suffix(".png")
@@ -173,6 +174,7 @@ def create_unit_args(unit: ConversionUnit) -> dict:
         "generate_palette": unit.generate_palette,
         "destination_path": unit.config.output_dir,
         "output_type": unit.config.output_type,
+        "compress" : unit.compress
     }
 
     return args

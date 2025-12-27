@@ -1,9 +1,8 @@
-[graphics]
+[general]
 bpp = 4
 transparent = "0x5D53"
 output_type = "both"
 destination = "./examples"
-generate_palettes = 1
 
 [[unit]]
 name = "test"
@@ -11,6 +10,7 @@ metatile_width = 5
 metatile_height = 5
 palette = ""
 palette_include = 1
+generate_palette = 0
 
 
 [[unit]]
@@ -19,14 +19,16 @@ metatile_width = 4
 metatile_height = 4
 palette = ""
 palette_include = 0
+generate_palette = 0
 
 
 [[unit]]
 name = "I_2"
 metatile_width = 4
 metatile_height = 4
-palette = ""
+palette = "./faulty_path"
 palette_include = 0
+generate_palette = 1
 
 
 [[unit]]
@@ -35,4 +37,4 @@ metatile_width = 4
 metatile_height = 4
 palette = ""
 palette_include = 0
-
+generate_palette = 1

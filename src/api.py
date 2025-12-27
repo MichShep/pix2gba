@@ -7,8 +7,32 @@ from .config import discover_build_roots, build_units, validate_unit, convert_un
 from .visualizer import OutputWindow
 from .converter import simulate_conversion
 from .config import clean_unit
+from .units import ConversionStats
 
 ROOT_DIRECTORY = Path(os.getcwd())
+
+def _output_conversion_stats(stats: ConversionStats) -> None:
+    """
+    Output the final stats (how many failed and which ones)
+    :param stats: ConversionStats data struct with final conversion statistics
+    :return: None
+    """
+
+    MAX_FAILED_UNITS = 5
+
+    print("* Final Statistics... ")
+    print(f" \tSuccess rate: {(stats.successful_conversions / stats.total_conversions)*100}% ({stats.successful_conversions}/{stats.total_conversions})")
+    print(f" \tFailed Unit Conversions: ", end="")
+    failed_names = ""
+    for i in range(min(MAX_FAILED_UNITS, len(stats.failed_conversion_names))):
+        failed_names += f"{stats.failed_conversion_names[i]}, "
+
+    print(failed_names[:-2]) # Remove the last ", "
+    if len(stats.failed_conversion_names) > MAX_FAILED_UNITS:
+        print(", ect...")
+    else:
+        print()
+
 
 def build_outputs():
     print(f"Converting all units in {ROOT_DIRECTORY}")
@@ -19,14 +43,29 @@ def build_outputs():
     # Build units from toml
     potential_units = build_units(build_paths)
 
+    # Create statistics tracker
+    stats = ConversionStats(
+        total_conversions=len(potential_units),
+        successful_conversions=0,
+        failed_conversion_names =[]
+    )
+
     # Process all units
     for unit in potential_units:
         # Validate unit
         if validate_unit(unit):
+            # Add failed name to list
+            stats.failed_conversion_names.append(unit.name)
             continue
+
+        # Increment success stat
+        stats.successful_conversions += 1
 
         # Send it to be converted
         convert_unit(unit)
+
+
+    _output_conversion_stats(stats)
 
 def clean_outputs():
     print(f"Cleaning all units in {ROOT_DIRECTORY}")

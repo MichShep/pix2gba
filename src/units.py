@@ -8,7 +8,6 @@ class ConversionConfig:
     output_type: str
     root_dir: Path
     output_dir: Path
-    generate_palette: bool
 
 @dataclass(frozen=True)
 class ConversionUnit:
@@ -18,3 +17,10 @@ class ConversionUnit:
     metatile_height: int
     palette_path: Path
     palette_include: bool
+    generate_palette: bool
+
+@dataclass(frozen=False)
+class ConversionStats:
+    total_conversions: int
+    successful_conversions: int
+    failed_conversion_names: list[str]

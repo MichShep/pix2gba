@@ -100,7 +100,6 @@ bpp = 4
 transparent = "0x5D53"
 output_type = "both"
 destination = "./examples"
-generate_palettes = 1
 
 [[unit]]
 name = "sprite1"
@@ -108,6 +107,7 @@ metatile_width = 5
 metatile_height = 5
 palette = ""
 palette_include = 1
+generate_palettes = 1
 
 [[unit]]
 name = "sprite2"
@@ -115,29 +115,30 @@ metatile_width = 4
 metatile_height = 4
 palette = ""
 palette_include = 0
+generate_palettes = 0
 ```
 
 ### [graphics] section
 
-| Key              | Type   | Description |
-|------------------|--------|-------------|
-| `bpp`            | int    | Bits per pixel (4 or 8 typically) |
-| `transparent`    | str    | RGB15 hex value for transparent color (e.g., `"0x5D53"`) |
-| `output_type`    | str    | Output format: `"h"`, `"c"`, or `"both"` |
-| `destination`    | path   | Output directory for generated files |
-| `generate_palettes` | bool | Whether to export a PNG palette file (0 or 1) |
+| Key              | Type   | Description                                                         |
+|------------------|--------|---------------------------------------------------------------------|
+| `bpp`            | int    | Bits per pixel (4 or 8 typically)                                   |
+| `transparent`    | str    | RGB15 hex value for transparent color (e.g., `"0x5D53"`)            |
+| `output_type`    | str    | Output format: `"h"`, `"c"`, or `"both"`                            |
+| `destination`    | path   | Output directory for generated files (relative to the project root) |
 
 ### [[unit]] section
 
 Each `unit` represents a single image to convert.
 
-| Key                 | Type | Description |
-|---------------------|------|-------------|
-| `name`             | str  | Name of the image file (without `.png`)                 |
-| `metatile_width`   | int  | Number of 8x8 tiles per metatile width                  |
-| `metatile_height`  | int  | Number of 8x8 tiles per metatile height                 |
-| `palette`          | path | Path to a custom palette image or `""` to auto-generate |
-| `palette_include`  | bool | Whether to embed the palette in the output (0 or 1) |
+| Key                | Type | Description                                                                   |
+|--------------------|------|-------------------------------------------------------------------------------|
+| `name`             | str  | Name of the image file (without `.png`)                                       |
+| `metatile_width`   | int  | Number of 8x8 tiles per metatile width                                        |
+| `metatile_height`  | int  | Number of 8x8 tiles per metatile height                                       |
+| `palette`          | path | Path to a custom palette image or `""` to auto-generate                       |
+| `palette_include`  | bool | Whether to embed the palette in the output (0 or 1)                           |
+| `generate_palette` | bool | Whether to export a PNG file containing the used palette of the unit (0 or 1) |
 
 ## Features
 

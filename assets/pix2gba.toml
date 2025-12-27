@@ -1,5 +1,5 @@
 [general]
-bpp = 4
+bpp = 2
 transparent = "0x5D53"
 output_type = "both"
 destination = "./examples"

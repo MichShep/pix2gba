@@ -42,13 +42,13 @@ pix2gba view Img  # View how the image will look on the GBA with the given setup
 
 ### Command Summary
 
-| Command      | Description                                             |
-|--------------|---------------------------------------------------------|
-| `make`       | Converts all defined units in `pix2gba.toml`            |
-| `build`      | Alias for `make`                                        |
-| `clean`      | Deletes all previously generated output files           |
-| `template`   | Reserved for generating template configs                |
+| Command      | Description                                                  |
+|--------------|--------------------------------------------------------------|
+| `make`       | Converts all defined units in `pix2gba.toml`                 |
+| `clean`      | Deletes all previously generated output files                |
+| `template`   | Generates an example `pix2gba.toml` in the project root      |
 | `view` `name` | View how a unit will look on the GBA given the data in `pix2gba.toml` |
+| `verify` | Verifys all units in project can be inputted into GBA Hardware |
 
 
 ## TOML Configuration

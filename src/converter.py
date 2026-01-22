@@ -12,9 +12,6 @@ def run_conversion(args: dict) -> bool:
 
     :param args: Namespace from argparse.
     """
-    file_name = args["image_name"]
-    input_dir = os.path.dirname(args["image_path"])
-    print(f"* Converting {file_name}... in {input_dir}")
 
     # Step 1: Create GBA palette
     #print("* Extracting Palette...")
@@ -54,8 +51,6 @@ def run_conversion(args: dict) -> bool:
             conversion_table=conversion_table,
             gba_palette=gba_palette
         )
-
-    print("* Done.\n")
 
     return False
 

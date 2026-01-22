@@ -20,6 +20,11 @@ lib.GBA_LZ77Compress.restype = ctypes.c_ssize_t
 
 
 def gba_lz77_compress(data: bytes) -> bytes:
+    """
+    The compression function that invokes a cpp bin to compress the data
+    :param data: Uncompressed byte stream of the unit
+    :return: Compressed byte stream of the unit
+    """
     # Ensure we have an immutable bytes object for from_buffer_copy
     if isinstance(data, bytearray):
         data = bytes(data)
@@ -178,12 +183,19 @@ def create_compressed_c_file(arguments:dict, image:LoadedImage, gba_palette:list
         file.write(file_str)
 
 def make_compress_output(arguments:dict, conversion_table:dict, gba_palette:list) -> None:
+    """
+    Makes the compressed output (.h and .c) of the tiles for the unit
+    :param arguments: The options for outputting the unit
+    :param conversion_table: The conversion table of rgb888 to rgb555
+    :param gba_palette: The 2^bpp wide palette for the image (palette that will be in the GBA)
+    :return: None
+    """
     meta_w = arguments["meta_width"]
     meta_h = arguments["meta_height"]
     bpp = arguments["bpp"]
     file_path = arguments["image_path"]
 
-    print(f"* Compressing {Path(file_path).name}...")
+    print(f" \t Compressing...")
 
     # Create the uncompressed data and make byte data
     raw_array = create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp, False)
@@ -192,7 +204,7 @@ def make_compress_output(arguments:dict, conversion_table:dict, gba_palette:list
     # Run compression Data
     compressed_bytes = gba_lz77_compress(byte_array)
 
-    print(f" \tCompressed from {len(raw_array) * 4} bytes to {len(compressed_bytes)} bytes!")
+    print(f" \t\t Compressed from {len(raw_array) * 4} bytes to {len(compressed_bytes)} bytes!")
 
     # Load in image
     img = PILImage.open(arguments["image_path"]).convert("RGB")

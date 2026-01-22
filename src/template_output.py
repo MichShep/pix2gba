@@ -1,6 +1,11 @@
 from pathlib import Path
 
 def add_template_file(project_root: Path):
+    """
+    Simple function that creates a template pix2gba.toml file in the project root
+    :param project_root:
+    :return:
+    """
     template = """# Template pix2gba TOML (move into directory and remove `_output` from toml name
 [general]
 bpp = 4

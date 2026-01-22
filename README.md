@@ -97,7 +97,7 @@ The `pix2gba.toml` file defines the global settings and individual conversion un
 ### Example
 
 ```toml
-[graphics]
+[general]
 bpp = 4
 transparent = "0x5D53"
 output_type = "both"
@@ -120,7 +120,7 @@ palette_include = 0
 generate_palettes = 0
 ```
 
-### [graphics] section
+### [general] section
 
 | Key              | Type   | Description                                                         |
 |------------------|--------|---------------------------------------------------------------------|

@@ -1,6 +1,7 @@
 from os import write
 from pathlib import Path
 from .tile_output import create_tile_data
+from .deduper import dedupe_tiles
 import ctypes
 import struct
 from PIL import Image as PILImage
@@ -78,7 +79,10 @@ def create_compressed_header_file(arguments:dict, image:LoadedImage, compressed_
     num_tiles = num_pxl // (8*8)
 
     # Comments and stuff
-    file_str = "// " + file_name + " on " + pal_name + " Palette Compressed with LZ77\n"
+    if arguments["dedupe"]:
+        file_str = "// " + file_name + " on " + pal_name + " Palette; Compressed with LZ77; Deduped\n"
+    else:
+        file_str = "// " + file_name + " on " + pal_name + " Palette; Compressed with LZ77\n"
     file_str += "#pragma once\n\n"
 
     file_str += ("//======================================================================\n" +
@@ -198,10 +202,18 @@ def make_compress_output(arguments:dict, conversion_table:dict, gba_palette:list
     print(f" \t Compressing...")
 
     # Create the uncompressed data and make byte data
-    raw_array = create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp, False)
+
+    if arguments["dedupe"]:
+        raw_array = create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp, True)
+        raw_array, tile_mapping = dedupe_tiles(raw_array, bpp)
+        raw_array = [int(s, 16) for s in raw_array]
+
+    else:
+        raw_array = create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp, False)
+
     byte_array = struct.pack("<%dI" % len(raw_array), *raw_array)
 
-    # Run compression Data
+    # Run compression algorithm
     compressed_bytes = gba_lz77_compress(byte_array)
 
     print(f" \t\t Compressed from {len(raw_array) * 4} bytes to {len(compressed_bytes)} bytes!")

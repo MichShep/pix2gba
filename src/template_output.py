@@ -21,6 +21,7 @@ palette = "./palette.png"
 palette_include = 1
 generate_palette = 1
 compress = 1
+dedupe = 1
 """
     template_path = (project_root / "pix2gba_template").with_suffix(".toml")
 

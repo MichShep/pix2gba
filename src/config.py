@@ -25,7 +25,8 @@ TOML_UNIT_ARGUMENTS = [
     "palette",
     "palette_include",
     "generate_palette",
-    "compress"
+    "compress",
+    "dedupe"
 ]
 
 RED = "\033[31m"
@@ -111,7 +112,8 @@ def _build_unit(element_data, config:ConversionConfig) -> ConversionUnit:
         palette_path=element_data["palette"],
         palette_include=element_data["palette_include"],
         generate_palette=element_data["generate_palette"],
-        compress=element_data["compress"]
+        compress=element_data["compress"],
+        dedupe=element_data["dedupe"]
     )
 
 def _is_power_of_two(n):
@@ -255,7 +257,8 @@ def create_unit_args(unit: ConversionUnit) -> dict:
         "generate_palette": unit.generate_palette,
         "destination_path": unit.config.output_dir,
         "output_type": unit.config.output_type,
-        "compress": unit.compress
+        "compress": unit.compress,
+        "dedupe": unit.dedupe
     }
 
     return args

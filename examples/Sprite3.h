@@ -1,4 +1,4 @@
-// Sprite3 on Sprite3 Palette
+// Sprite3 on Sprite3 Palette; Deduped
 #pragma once
 
 //======================================================================
@@ -9,7 +9,7 @@
 //	+ Number of Bytes : 1024
 //	+ Number of U32   : 256
 //	+ Blank Color     : 0x5d53
-//	2026-01-11 11:42:06.277520
+//	2026-01-22 17:36:13.786759
 //======================================================================
 
 /**
@@ -29,3 +29,20 @@
  * 
  */
 extern const unsigned int Sprite3Tiles[256];
+
+/**
+ * @brief The array of Tile indices to create Sprite3 from other Tiles after deduping. 
+ * 
+ */
+extern const unsigned int Sprite3TileMapping[32];
+
+/**
+ * @brief The number of bytes the Palette for Sprite3 occupies. 
+ * 
+ */
+#define Sprite3PalLen 24
+
+/**
+ * @brief The array of rgb5 (short) numbers that create Sprite3's Palette. 
+ */
+extern const unsigned short Sprite3Pal[12];

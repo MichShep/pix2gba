@@ -10,6 +10,7 @@ from .converter import simulate_conversion
 from .config import clean_unit
 from .units import ConversionStats, VerificationStats
 from .template_output import add_template_file
+from .deduper import dedupe_tiles
 
 ROOT_DIRECTORY = Path(os.getcwd())
 
@@ -115,6 +116,10 @@ def view_output(img_name:str):
     # Create Vizual Data
     tile_data, pal_data = simulate_conversion(create_unit_args(found_unit))
     img = PILImage.open(Path(found_unit.config.root_dir / found_unit.name).with_suffix(".png"))
+
+    # Consider showing what tiles will be given after dedupe
+    #if found_unit.dedupe:
+    #    tile_data = dedupe_tiles(tile_data, found_unit.config.bpp)
 
     # Visualize!
     app = QtWidgets.QApplication()

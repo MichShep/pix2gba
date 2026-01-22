@@ -12,6 +12,7 @@ palette = "./assets/Sprite1_pal.png"
 palette_include = 1
 generate_palette = 0
 compress = 1
+dedupe = 1
 
 [[unit]]
 name = "Sprite2"
@@ -21,12 +22,14 @@ palette = "./faulty_path"
 palette_include = 0
 generate_palette = 1
 compress = 0
+dedupe = 0
 
 [[unit]]
 name = "Sprite3"
 metatile_width = 4
 metatile_height = 4
 palette = ""
-palette_include = 0
+palette_include = 1
 generate_palette = 1
 compress = 0
+dedupe = 1

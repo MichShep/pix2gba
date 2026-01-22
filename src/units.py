@@ -42,6 +42,7 @@ class ConversionUnit:
     palette_include: bool
     generate_palette: bool
     compress: bool
+    dedupe: bool
 
 
 @dataclass(frozen=False)

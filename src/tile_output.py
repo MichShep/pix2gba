@@ -4,6 +4,7 @@ from datetime import datetime
 
 from .gba_utils import rgb15_to_rgb888
 from .tile_creator import create_tile_data
+from .deduper import dedupe_tiles
 
 # Type alias for a loaded PIL image
 LoadedImage = PILImage.Image
@@ -59,7 +60,10 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
     num_tiles = num_pxl // (8 * 8)
 
     # File header comments and include guard
-    file_str = "// " + file_name + " on " + pal_name + " Palette\n"
+    if arguments["dedupe"]:
+        file_str = "// " + file_name + " on " + pal_name + " Palette; Deduped\n"
+    else:
+        file_str = "// " + file_name + " on " + pal_name + " Palette\n"
     file_str += "#pragma once\n\n"
 
     # Detailed metadata block
@@ -96,6 +100,15 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
                  " * \n" +
                  " */\n")
     file_str += "extern const unsigned int " + file_name + "Tiles[" + str(num_u32) + "];\n"
+
+    if arguments["dedupe"]:
+        # External tile mapping data declaration
+        file_str += ("\n/**\n" +
+                     " * @brief The array of Tile indices to create " +
+                     file_name + " from other Tiles after deduping. \n" +
+                     " * \n" +
+                     " */\n")
+        file_str += "extern const unsigned int " + file_name + f"TileMapping[{num_tiles}];\n"
 
     # Palette declarations if palette output is enabled
     if arguments["palette_included"]:
@@ -140,6 +153,11 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
 
     # Generate tile data array
     final_array = create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp)
+    tile_mapping = None
+
+    if arguments["dedupe"]:
+        final_array, tile_mapping = dedupe_tiles(final_array, bpp)
+
     file_name = get_filename_from_path(file_path)
 
     # Calculate data sizes
@@ -167,6 +185,20 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
 
     file_str += "};\n"
 
+    # If deduped add the tile_mapping table
+    if arguments["dedupe"]:
+        file_str += (
+            f"\nconst unsigned char {file_name}TileMapping[{num_pxl // (8*8)}] = {{\n\t"
+        )
+        count = 0
+        for index in tile_mapping:
+            file_str += f"{index}, "
+            if count % 8 == 0 and count != 0:
+                file_str += "\n\t"
+            count += 1
+        file_str = file_str[:-2]
+        file_str += "\n};\n"
+
     # Append palette data if included
     if arguments["palette_included"]:
         file_str += (
@@ -182,6 +214,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
         # Remove trailing comma
         file_str = file_str[0:file_str.rfind(',')]
         file_str += "\n};\n"
+
 
     # Write the C file to disk
     new_file_name = f"{dest}/" if dest is not None else ""
@@ -240,13 +273,13 @@ def make_output(arguments:dict, conversion_table:dict, gba_palette:list) -> None
     # Determine which output files to generate
     output_type = arguments["output_type"]
 
-    # Generate header file if requested
-    if output_type == "both" or output_type == "h":
-        create_header_file(arguments, img, conversion_table, gba_palette)
-
     # Generate C source file if requested
     if output_type == "both" or output_type == "c":
         create_c_file(arguments, img, conversion_table, gba_palette)
+
+    # Generate header file if requested
+    if output_type == "both" or output_type == "h":
+        create_header_file(arguments, img, conversion_table, gba_palette)
 
     # Generate palette preview PNG if enabled
     if arguments["generate_palette"]:

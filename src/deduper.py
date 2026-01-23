@@ -41,12 +41,14 @@ def dedupe_tiles(hex_list: list, bpp: int)-> tuple[list[hex], list[int]]:
     # 3. Compare the values and eliminate duplicates and create tile mapping
     tile_mapping = []
     lookup_table = {}
+    unique_tiles = 0
     for i in range(len(hash_list)):
         entry = hash_list[i]
         # If not in the lut then is a unique entry
         if entry not in lookup_table:
             lookup_table[entry] = [i]
-            tile_mapping.append(i)
+            tile_mapping.append(unique_tiles)
+            unique_tiles += 1
         # If there is a collision, compare with all in that bucket for uniqueness
         else:
             found_match = False
@@ -61,6 +63,7 @@ def dedupe_tiles(hex_list: list, bpp: int)-> tuple[list[hex], list[int]]:
             if not found_match:
                 lookup_table[entry].append(i)
                 tile_mapping.append(i)
+                unique_tiles += 1
 
 
     print(f" \t\t Deduped from {len(tile_list)} to {len(lookup_table.values())} tiles!")
@@ -71,6 +74,6 @@ def dedupe_tiles(hex_list: list, bpp: int)-> tuple[list[hex], list[int]]:
         for tile_id in entry:
             final_list.extend(tile_list[tile_id])
 
-    final_list = [hex(i) for i in final_list]
+    final_list = ["0x{:08x}".format(i) for i in final_list]
 
     return final_list, tile_mapping

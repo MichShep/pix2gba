@@ -110,6 +110,8 @@ metatile_height = 5
 palette = ""
 palette_include = 1
 generate_palettes = 1
+compress = 0
+dedupe = 1
 
 [[unit]]
 name = "sprite2"
@@ -118,6 +120,9 @@ metatile_height = 4
 palette = "root/pals/pal1.png"
 palette_include = 0
 generate_palettes = 0
+compress = 1
+dedupe = 0
+
 ```
 
 ### [general] section
@@ -142,6 +147,8 @@ Each `unit` represents a single image to convert.
 | `palette_include`  | bool | Whether to embed the palette in the output (0 or 1)                           |
 | `generate_palette` | bool | Whether to export a PNG file containing the used palette of the unit (0 or 1) |
 | `compress`         | bool | Whether to compress the resulting tile data                                   |
+| `dedupe`           | bool | Whether to dedupe (remove duplicate tiles) tiles                              |
+
 
 ## Features
 
@@ -151,6 +158,7 @@ Each `unit` represents a single image to convert.
 - Configurable metatile sizes
 - Outputs `.h` and `.c` files
 - PNG preview of the palette
+- Remove duplicated tiles and provide a tile map to create unit
 
 
 ## Output Format
@@ -242,11 +250,31 @@ When compression is enabled:
 
 On the GBA, the data is decompressed using:
 
-```bash
-# If destination is in Vram
+```c
+// If destination is in Vram
 LZ77UnCompVram(compressedTiles, destinationInVRAM);
 
-# If destination is in Wram
+// If destination is in Wram
+LZ77UnCompWram(compressedTiles, destinationInWRAM);
+```
+
+---
+
+### Deduping
+
+More so for larger images, units usually contain duplicate 8x8pxl tiles that are identical duplicates. Deduping is the process of identifying and removing all duplicates to reduce ROM size and the amount of tiles occupies in VRAM.
+
+When dedupe is enabled:
+
+- Tiles that are identical copies of another tile are completely removed
+
+- A tile map is generated that maps each tile in the image to a tile in the deduped set.
+
+```c
+// If destination is in VRAM
+LZ77UnCompVram(compressedTiles, destinationInVRAM);
+
+// If destination is in WRAM
 LZ77UnCompWram(compressedTiles, destinationInWRAM);
 ```
 

@@ -188,14 +188,14 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
     # If deduped add the tile_mapping table
     if arguments["dedupe"]:
         file_str += (
-            f"\nconst unsigned char {file_name}TileMapping[{num_pxl // (8*8)}] = {{\n\t"
+            f"\nconst unsigned char {file_name}TileMapping[{num_pxl // (8*8)}] = \n{{\n\t"
         )
         count = 0
         for index in tile_mapping:
             file_str += f"{index}, "
+            count += 1
             if count % 8 == 0 and count != 0:
                 file_str += "\n\t"
-            count += 1
         file_str = file_str[:-2]
         file_str += "\n};\n"
 
@@ -203,7 +203,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
     if arguments["palette_included"]:
         file_str += (
             f"\nconst unsigned short {file_name}Pal[{2**bpp}] "
-            "__attribute__((aligned(2))) __attribute__((visibility(\"hidden\")))= \n{{\n"
+            "__attribute__((aligned(2))) __attribute__((visibility(\"hidden\")))= \n{\n"
         )
 
         for i in range(0, len(gba_palette), 8):

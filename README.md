@@ -4,7 +4,7 @@ A Python-based tool for converting standard image formats (PNG, JPEG) into GBA-c
 
 ## Introduction
 
-`pix2gba` is a tile and palette converter designed for Game Boy Advance development. It is used to generate `.c` and `.h` files from images based on configuration stored in TOML files, with the option to compress the data. The tool supports multiple conversion units per project and is well-suited for automation or large asset pipelines.
+`pix2gba` is a tile and palette converter designed for Game Boy Advance development. It is used to generate `.c` and `.h` files from images based on configuration stored in TOML files, with the option to compress and dedupe the data. The tool supports multiple conversion units per project and is well-suited for automation or large asset pipelines.
 
 This updated version uses a declarative configuration model (via `pix2gba.toml`) and can be run using simple system commands.
 
@@ -13,7 +13,7 @@ This updated version uses a declarative configuration model (via `pix2gba.toml`)
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/pix2gba.git
+git clone https://github.com/MichShep/pix2gba.git
 cd pix2gba
 ```
 

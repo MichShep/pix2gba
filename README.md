@@ -259,17 +259,18 @@ LZ77UnCompWram(compressedTiles, destinationInWRAM);
 ```
 
 ---
-
 ### Deduping
+Large sprites and backgrounds often contain many identical 8x8 tiles, especially in flat regions, repeated patterns, or symmetrical artwork. Storing these tiles multiple times wastes both ROM space and limited VRAM.
 
-More so for larger images, units usually contain duplicate 8x8pxl tiles that are identical duplicates. Deduping is the process of identifying and removing all duplicates to reduce ROM size and the amount of tiles occupies in VRAM.
+Deduplication analyzes all tiles within a unit and eliminates exact duplicates, ensuring that each unique tile is stored only once.
 
-When dedupe is enabled:
+When deduplication is enabled:
 
-- Tiles that are identical copies of another tile are completely removed
+- Only a single copy of each unique 8x8 tile is emitted in the tileset.
 
-- A tile map is generated that maps each tile in the image to a tile in the deduped set.
+- A tilemap is generated that remaps the original tile layout to indices in the deduplicated tileset.
 
+Because the GBA renders tiles by index, this optimization incurs no runtime cost while significantly reducing memory usage.
 ```c
 // If destination is in VRAM
 LZ77UnCompVram(compressedTiles, destinationInVRAM);

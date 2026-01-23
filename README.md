@@ -271,13 +271,6 @@ When deduplication is enabled:
 - A tilemap is generated that remaps the original tile layout to indices in the deduplicated tileset.
 
 Because the GBA renders tiles by index, this optimization incurs no runtime cost while significantly reducing memory usage.
-```c
-// If destination is in VRAM
-LZ77UnCompVram(compressedTiles, destinationInVRAM);
-
-// If destination is in WRAM
-LZ77UnCompWram(compressedTiles, destinationInWRAM);
-```
 
 ---
 

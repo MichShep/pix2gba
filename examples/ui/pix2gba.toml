@@ -13,3 +13,13 @@ palette_include = 1
 generate_palette = 0
 compress = 0
 dedupe = 1
+
+[[unit]]
+name = "InventoryBackground"
+metatile_width = 1
+metatile_height = 1
+palette = ""
+palette_include = 1
+generate_palette = 0
+compress = 0
+dedupe = 1

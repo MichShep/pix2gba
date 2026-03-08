@@ -18,9 +18,9 @@ const unsigned int Sprite5Tiles[192] __attribute__((aligned(4))) __attribute__((
 
 const unsigned char Sprite5TileMapping[24] = 
 {
-	0, 1, 1, 1, 2, 3, 5, 5, 
-	1, 4, 5, 1, 5, 6, 5, 5, 
-	7, 8, 1, 9, 10, 11, 5, 12, 
+	0, 1, 1, 1, 2, 3, 3, 3, 
+	1, 4, 5, 1, 3, 6, 3, 3, 
+	7, 8, 1, 9, 10, 11, 3, 12, 
 };
 
 const unsigned short Sprite5Pal[16] __attribute__((aligned(2))) __attribute__((visibility("hidden")))= 

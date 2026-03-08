@@ -1,78 +1,75 @@
-
 def _hash_list(l: list):
     result = 17
     for i in range(len(l)):
         result = result * 31 + l[i]
-
     return result
 
-def _compare_lists(l1: list, l2: list)-> bool:
+
+def _compare_lists(l1: list, l2: list) -> bool:
     """
-    Checks if two lists are the same value wise
-    :param l1: List 1
-    :param l2: List 2
-    :return: True if the same, False is different
+    Checks if two lists contain identical values
     """
+    if len(l1) != len(l2):
+        return False
+
     for i in range(len(l1)):
         if l1[i] != l2[i]:
             return False
 
     return True
 
-def dedupe_tiles(hex_list: list, bpp: int)-> tuple[list[hex], list[int]]:
+
+def dedupe_tiles(hex_list: list, bpp: int) -> tuple[list[str], list[int]]:
     print(" \t Deduping...")
-    # 1. Split of stream of hex to tile
+
+    # 1. Convert hex strings to ints
     int_list = [int(h, 16) for h in hex_list]
 
+    # 2. Split stream into tiles
+    tile_size = 2 * bpp
     tile_list = []
-    hex_tile_list = []
-    temp_tile = []
-    for i in range(len(int_list)):
-        if i % (2*bpp) == 0 and i != 0:
-            tile_list.append(temp_tile)
-            temp_tile = []
 
-        temp_tile.append(int_list[i])
-    tile_list.append(temp_tile)
+    for i in range(0, len(int_list), tile_size):
+        tile_list.append(int_list[i:i + tile_size])
 
-    # 2. Hash all tiles into single value
-    hash_list = [_hash_list(l) for l in tile_list]
+    # 3. Hash all tiles
+    hash_list = [_hash_list(tile) for tile in tile_list]
 
-    # 3. Compare the values and eliminate duplicates and create tile mapping
-    tile_mapping = []
-    lookup_table = {}
-    unique_tiles = 0
-    for i in range(len(hash_list)):
+    # 4. Deduplicate using hash buckets
+    lookup_table = {}   # hash -> list of tile indices
+    unique_tile_ids = []  # stores the original tile index of each unique tile
+    tile_mapping = []   # maps each tile to its unique tile index
+
+    for i in range(len(tile_list)):
         entry = hash_list[i]
-        # If not in the lut then is a unique entry
+
         if entry not in lookup_table:
             lookup_table[entry] = [i]
-            tile_mapping.append(unique_tiles)
-            unique_tiles += 1
-        # If there is a collision, compare with all in that bucket for uniqueness
+            unique_tile_ids.append(i)
+            tile_mapping.append(len(unique_tile_ids) - 1)
+
         else:
             found_match = False
+
             for index in lookup_table[entry]:
-                # If the current list matches one in the bucket then isn't unique
                 if _compare_lists(tile_list[i], tile_list[index]):
                     found_match = True
-                    tile_mapping.append(index)
+                    unique_index = unique_tile_ids.index(index)
+                    tile_mapping.append(unique_index)
                     break
 
-            # If here then the list is unique to all others in the hash
             if not found_match:
                 lookup_table[entry].append(i)
-                tile_mapping.append(i)
-                unique_tiles += 1
+                unique_tile_ids.append(i)
+                tile_mapping.append(len(unique_tile_ids) - 1)
 
+    print(f" \t\t Deduped from {len(tile_list)} to {len(unique_tile_ids)} tiles!")
 
-    print(f" \t\t Deduped from {len(tile_list)} to {len(lookup_table.values())} tiles!")
-
-    # 4. Go through each kept tile and add data to final array
+    # 5. Build final tile list
     final_list = []
-    for entry in lookup_table.values():
-        for tile_id in entry:
-            final_list.extend(tile_list[tile_id])
+
+    for tile_id in unique_tile_ids:
+        final_list.extend(tile_list[tile_id])
 
     final_list = ["0x{:08x}".format(i) for i in final_list]
 

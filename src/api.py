@@ -10,7 +10,7 @@ from .converter import simulate_conversion
 from .config import clean_unit
 from .units import ConversionStats, VerificationStats
 from .template_output import add_template_file
-from .deduper import dedupe_tiles
+from .cache import create_caches, read_caches
 
 ROOT_DIRECTORY = Path(os.getcwd())
 
@@ -40,7 +40,6 @@ def _output_conversion_stats(stats: ConversionStats) -> None:
         print(" \tNo conversion units were found! Use `pix2gba template` to create a valid TOML file and place in "
               "directory with units")
 
-
 def build_outputs():
     """
     Handler for finding all units, converting them, and saving the output
@@ -54,34 +53,46 @@ def build_outputs():
     # Build units from toml
     potential_units = build_units(build_paths)
 
+    # Check which units don't need to be updated
+    print(f"* \t Reading cache files...")
+    read_caches(potential_units)
+    print()
+
     # Create statistics tracker
     stats = ConversionStats(
-        total_conversions=len(potential_units),
+        total_conversions=0,
         successful_conversions=0,
         failed_conversion_names =[]
     )
 
     # Process all units
-    for unit in potential_units:
-        print (f"* \t Starting {unit.name}...")
-        # Validate unit
-        print (f" \t Validating...")
-        if validate_unit(unit):
-            # Add failed name to list
-            stats.failed_conversion_names.append(unit.name)
-            continue
+    failed_units = []
+    for path_units in potential_units.values():
+        for unit in path_units:
+            stats.total_conversions += 1
+            print (f"* \t Starting {unit.name}...")
+            # Validate unit
+            print (f" \t Validating...")
+            if validate_unit(unit):
+                # Add failed name to list
+                stats.failed_conversion_names.append(unit.name)
+                failed_units.append(unit)
+                continue
 
-        # Increment success stat
-        stats.successful_conversions += 1
+            # Increment success stat
+            stats.successful_conversions += 1
 
-        # Send it to be converted
-        print(f" \t Converting...")
-        convert_unit(unit)
+            # Send it to be converted
+            print(f" \t Converting...")
+            convert_unit(unit)
 
-        print(f" \t Done.\n")
+            print(f" \t Done.\n")
 
     print()
+
     _output_conversion_stats(stats)
+
+    create_caches(potential_units, failed_units)
 
 def clean_outputs():
     """
@@ -93,12 +104,20 @@ def clean_outputs():
     # Find all toml files
     build_paths = discover_build_roots(ROOT_DIRECTORY)
 
+    # Remove all cache files
+    for path in build_paths:
+        cache_path = path / "pix2gba_cache.json"
+
+        if cache_path.exists():
+            os.remove(cache_path)
+
     # Find all units
     potential_units = build_units(build_paths)
 
     # Iterate through each unit and delete the files generated from it
-    for unit in potential_units:
-        clean_unit(unit)
+    for path_units in potential_units.values():
+        for unit in path_units:
+            clean_unit(unit)
 
 def view_output(img_name:str):
     """
@@ -190,24 +209,25 @@ def verify_inputs():
     )
 
     # Process all units
-    for unit in potential_units:
-        if unit is None:
-            continue
+    for path_units in potential_units.values():
+        for unit in path_units:
+            if unit is None:
+                continue
 
-        # Validate unit
-        print (f"* \t Verifying {unit.name}...")
-        error_code = validate_unit(unit)
-        if error_code:
-            # Add failed name to list
-            stats.failed_unit_names.append(unit.name)
-            stats.unit_error_code.append(error_code)
-            continue
-        else:
-            print(f" \t Done.")
+            # Validate unit
+            print (f"* \t Verifying {unit.name}...")
+            error_code = validate_unit(unit)
+            if error_code:
+                # Add failed name to list
+                stats.failed_unit_names.append(unit.name)
+                stats.unit_error_code.append(error_code)
+                continue
+            else:
+                print(f" \t Done.")
 
-        stats.successful_units += 1
+            stats.successful_units += 1
 
-        print()
+            print()
 
     _output_verification_stats(stats)
 

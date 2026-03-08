@@ -1,7 +1,2 @@
-
-*.png
-*.c
-*.h
-*.toml
 __pycache__
 .DS_store

@@ -1,5 +1,4 @@
 import argparse
-from cgi import parse
 
 from .api import build_outputs, clean_outputs, make_template, view_output, verify_inputs, create_byte_data
 

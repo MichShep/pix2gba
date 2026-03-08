@@ -11,23 +11,23 @@ ACCEPTED_OUTPUT_TYPES = [
     "h"
 ]
 
-TOML_CONFIG_ARGUMENTS = [
-    "bpp",
-    "transparent",
-    "output_type",
-    "destination"
-]
+DEFAULT_TOML_CONFIG_ARGUMENTS = {
+    "bpp" : 4,
+    "transparent" : 0x5D53,
+    "output_type" : "both",
+    "destination" : "./"
+}
 
-TOML_UNIT_ARGUMENTS = [
-    "name",
-    "metatile_width",
-    "metatile_height",
-    "palette",
-    "palette_include",
-    "generate_palette",
-    "compress",
-    "dedupe"
-]
+DEFAULT_TOML_UNIT_ARGUMENTS = {
+    "name" : None,
+    "metatile_width" : 1,
+    "metatile_height" : 1,
+    "palette" : "",
+    "palette_include" : True,
+    "generate_palette" : False,
+    "compress" : False,
+    "dedupe" : False,
+}
 
 RED = "\033[31m"
 RESET = "\033[0m"
@@ -39,7 +39,6 @@ def _print_red(message: str) -> None:
     :return: None
     """
     print(RED + message + RESET)
-
 
 def discover_build_roots(root: Path) -> list[Path]:
     """
@@ -68,14 +67,9 @@ def _build_config(toml_data, root_dir:Path) -> ConversionConfig:
     :return: A populated ConversionConfig instance.
     """
 
-    missing_settings = []
-    for setting in TOML_CONFIG_ARGUMENTS:
-        if setting not in toml_data["general"]:
-            missing_settings.append(setting)
-
-    if missing_settings:
-        _print_red(f"\t TOML in {root_dir} is missing arguments: `{'`, `'.join(missing_settings)}`")
-        return None
+    for key in DEFAULT_TOML_CONFIG_ARGUMENTS.keys():
+        if key not in toml_data["general"]:
+            toml_data["general"][key] = DEFAULT_TOML_CONFIG_ARGUMENTS[key]
 
     return ConversionConfig(
         bpp=toml_data["general"]["bpp"],
@@ -95,14 +89,11 @@ def _build_unit(element_data, config:ConversionConfig) -> ConversionUnit:
     :param config: Shared ConversionConfig for the unit.
     :return: A populated ConversionUnit instance.
     """
-    missing_settings = []
-    for setting in TOML_UNIT_ARGUMENTS:
-        if setting not in element_data:
-            missing_settings.append(setting)
 
-    if missing_settings:
-        _print_red(f"\t Unit in {config.root_dir} is missing arguments: `{'`, `'.join(missing_settings)}`")
-        return None
+    for key in DEFAULT_TOML_UNIT_ARGUMENTS:
+        if key not in element_data:
+            element_data[key] = DEFAULT_TOML_UNIT_ARGUMENTS[key]
+            #_print_red(f"\t Missing argument {key}; resulting to default value of {DEFAULT_TOML_UNIT_ARGUMENTS[key]}")
 
     return ConversionUnit(
         config=config,
@@ -171,15 +162,16 @@ def _validate_config(config: ConversionConfig) -> bool:
 
     return False
 
-def build_units(build_roots: list[Path]) -> list[ConversionUnit]:
+def build_units(build_roots: list[Path]) -> dict[Path, list[ConversionUnit]]:
     """
     Builds ConversionUnit objects from all discovered build roots.
     :param build_roots: List of directories containing pix2gba.toml files.
     :return: A list of ConversionUnit objects.
     """
-    build_units: list[ConversionUnit] = []
+    build_units = {}
 
     for build_root in build_roots:
+        temp_units = []
         toml_file = build_root / "pix2gba.toml"
         toml_data = toml.load(toml_file)
         potential_units = len(toml_data["unit"])
@@ -192,7 +184,9 @@ def build_units(build_roots: list[Path]) -> list[ConversionUnit]:
 
         for element in toml_data["unit"]:
             unit = _build_unit(element, config)
-            build_units.append(unit)
+            temp_units.append(unit)
+
+        build_units[build_root] = temp_units
 
     return build_units
 
@@ -210,7 +204,6 @@ def validate_unit(unit: ConversionUnit) -> int:
         _print_red(f" \t ERROR: Input image `{img_path}` does not exist\n")
         return 1
 
-    pal_path = Path(unit.config.root_dir / unit.palette_path).with_suffix(".png")
     if unit.palette_path != "":
         if not Path(unit.palette_path).exists():
             _print_red(f" \t ERROR: Palette path does not exist: `{unit.palette_path}`\n")

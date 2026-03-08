@@ -94,6 +94,8 @@ All `pix2gba.toml` files in `sprites/`, `backgrounds/`, etc. will be discovered 
 
 The `pix2gba.toml` file defines the global settings and individual conversion units.
 
+**Note** that if a field is not provided a default value will be supplied and noted
+
 ### Example
 
 ```toml
@@ -159,6 +161,7 @@ Each `unit` represents a single image to convert.
 - Outputs `.h` and `.c` files
 - PNG preview of the palette
 - Remove duplicated tiles and provide a tile map to create unit
+- Caches the units to avoid rebuilding unchanged files
 
 
 ## Output Format
@@ -177,6 +180,45 @@ Each `unit` represents a single image to convert.
 
 All output respects alignment and visibility attributes needed for GBA toolchains.
 
+## Build Cache System
+
+To speed up repeated asset builds, `pix2gba` uses a **content-based caching system**.  
+This prevents unnecessary conversions when assets have not changed.
+
+Each directory containing a `pix2gba.toml` will automatically generate a cache file: ```pix2gba_cache.json```
+
+This makes repeated builds **significantly faster**, especially in large asset pipelines.
+
+
+### How the Cache Works
+
+For every unit defined in `pix2gba.toml`, the tool calculates three hashes:
+
+| Hash Type | What It Tracks |
+|-----------|---------------|
+| **Configuration Hash** | Global `[general]` TOML settings |
+| **Unit Hash** | The `[[unit]]` configuration values |
+| **Image Hash** | The raw pixel data of the `.png` file |
+
+These hashes are stored inside `pix2gba_cache.json`.
+
+Example cache file:
+
+```json
+{
+    "configuration": "6f1a5c7d1d7a...",
+    "player": {
+        "unit": "c4c8a5c01d4...",
+        "image": "f3a8f9b74c1...",
+        "version": "0.4.0"
+    },
+    "enemy": {
+        "unit": "3ddc9ab231...",
+        "image": "8c9a61c20f...",
+        "version": "0.4.0"
+    }
+}
+```
 
 ## Technical Concepts
 
@@ -279,20 +321,7 @@ LZ77UnCompVram(compressedTiles, destinationInVRAM);
 LZ77UnCompWram(compressedTiles, destinationInWRAM);
 ```
 
----
-
-## Troubleshooting
-
-Common issues and how to address them:
-
-- **Image not found**: Ensure the `.png` file exists and is named correctly (no extension in the TOML).
-- **Palette not found**: If a palette is specified, it must also be a `.png` file.
-- **Invalid BPP**: Only values like `4` or `8` (powers of two) are accepted.
-- **Transparent color invalid**: Must be a valid RGB15 hex (e.g., `0x1F1F`) and below `0x7FFF`.
-- **Output directory errors**: Make sure the `destination` path exists and is a directory.
-- **Padding or alignment issues**: Images that don’t align with metatile sizes will be automatically padded.
-- **No output generated**: Ensure you’re in the correct directory and that your TOML file is named `pix2gba.toml`.
-
+--- 
 ## License
 
 This project is licensed under the MIT License.

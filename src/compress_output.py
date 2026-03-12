@@ -8,7 +8,7 @@ from PIL import Image as PILImage
 from datetime import datetime
 LoadedImage = PILImage.Image
 
-lib = ctypes.CDLL("./bin/lz77.so")
+lib = ctypes.CDLL("/Users/michshep/Desktop/Resonant/pix2gba/bin/lz77.so")
 
 lib.GBA_LZ77CompressBound.argtypes = [ctypes.c_size_t]
 lib.GBA_LZ77CompressBound.restype  = ctypes.c_size_t

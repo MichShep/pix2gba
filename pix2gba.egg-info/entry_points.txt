@@ -1,0 +1,2 @@
+[console_scripts]
+pix2gba = src.cli:main

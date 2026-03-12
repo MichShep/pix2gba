@@ -78,7 +78,8 @@ def create_tile_data(file_path:str, conversion_table:dict, meta_w:int, meta_h:in
                     px = img.getpixel((x + x_offset + line_offset, y + y_offset))
 
                     # Convert RGB24 -> RGB15 -> palette index
-                    idx = conversion_table[rgb24_to_rgb15(px)]
+                    rgb15 = rgb24_to_rgb15(px)
+                    idx = conversion_table.get(rgb15, 0)
 
                     # Shift palette index into the correct position
                     shift = bpp * x

@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: pix2gba
+Version: 0.3.0
+Summary: PNG to GBA asset converter
+Requires-Python: >=3.9

@@ -108,7 +108,7 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
                      file_name + " from other Tiles after deduping. \n" +
                      " * \n" +
                      " */\n")
-        file_str += "extern const unsigned short " + file_name + f"TileMapping[{num_tiles}];\n"
+        file_str += "extern const unsigned int " + file_name + f"TileMapping[{num_tiles}];\n"
 
     # Palette declarations if palette output is enabled
     if arguments["palette_included"]:
@@ -188,7 +188,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
     # If deduped add the tile_mapping table
     if arguments["dedupe"]:
         file_str += (
-            f"\nconst unsigned short {file_name}TileMapping[{num_pxl // (8*8)}] = \n{{\n\t"
+            f"\nconst unsigned char {file_name}TileMapping[{num_pxl // (8*8)}] = \n{{\n\t"
         )
         count = 0
         for index in tile_mapping:

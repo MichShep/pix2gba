@@ -84,14 +84,14 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
                  " * @brief The number of tiles to make " + file_name + ". \n" +
                  " * \n" +
                  " */\n")
-    file_str += "#define " + file_name + "TileAmount " + str(num_tiles) + "\n\n"
+    file_str += "#define " + file_name + "_TILE_COUNT " + str(num_tiles) + "\n\n"
 
     # Tile data length macro
     file_str += ("/**\n" +
                  " * @brief The number of bytes " + file_name + " occupies. \n" +
                  " * \n" +
                  " */\n")
-    file_str += "#define " + file_name + "TilesLen " + str(num_bytes) + "\n\n"
+    file_str += "#define " + file_name + "_TILE_BYTES " + str(num_bytes) + "\n\n"
 
     # External tile data declaration
     file_str += ("/**\n" +
@@ -99,7 +99,7 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
                  file_name + " in Tiles. \n" +
                  " * \n" +
                  " */\n")
-    file_str += "extern const unsigned int " + file_name + "Tiles[" + str(num_u32) + "];\n"
+    file_str += "extern const unsigned int " + file_name + "_TILES[" + str(num_u32) + "];\n"
 
     if arguments["dedupe"]:
         # External tile mapping data declaration
@@ -108,7 +108,7 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
                      file_name + " from other Tiles after deduping. \n" +
                      " * \n" +
                      " */\n")
-        file_str += "extern const unsigned int " + file_name + f"TileMapping[{num_tiles}];\n"
+        file_str += "extern const unsigned short " + file_name + f"_TILE_MAPPING[{num_tiles}];\n"
 
     # Palette declarations if palette output is enabled
     if arguments["palette_included"]:
@@ -116,12 +116,12 @@ def create_header_file(arguments:dict, image:LoadedImage, conversion_table:dict,
                      f" * @brief The number of bytes the Palette for {file_name} occupies. \n" +
                      " * \n" +
                      " */\n")
-        file_str += "#define " + file_name + "PalLen " + str(len(gba_palette) * 2) + "\n"
+        file_str += "#define " + file_name + "_PAL_LEN " + str(len(gba_palette) * 2) + "\n"
 
         file_str += ("\n/**\n" +
                      f" * @brief The array of rgb5 (short) numbers that create {file_name}'s Palette. \n" +
                      " */\n")
-        file_str += "extern const unsigned short " + file_name + "Pal[" + str(len(gba_palette)) + "];\n"
+        file_str += "extern const unsigned short " + file_name + "_PAL[" + str(len(gba_palette)) + "];\n"
 
     # Write the header file to disk
     new_file_name = f"{dest}/" if dest is not None else ""
@@ -168,7 +168,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
 
     # Begin C array definition with alignment attributes
     file_str = (
-        "const unsigned int " + file_name + "Tiles[" + str(num_u32) + "] "
+        "const unsigned int " + file_name + "_TILES[" + str(num_u32) + "] "
         "__attribute__((aligned(4))) __attribute__((visibility(\"hidden\")))=\n{\n"
     )
 
@@ -188,7 +188,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
     # If deduped add the tile_mapping table
     if arguments["dedupe"]:
         file_str += (
-            f"\nconst unsigned char {file_name}TileMapping[{num_pxl // (8*8)}] = \n{{\n\t"
+            f"\nconst unsigned short {file_name}_TILE_MAPPING[{num_pxl // (8*8)}] = \n{{\n\t"
         )
         count = 0
         for index in tile_mapping:
@@ -202,7 +202,7 @@ def create_c_file(arguments:dict, image:LoadedImage, conversion_table:dict, gba_
     # Append palette data if included
     if arguments["palette_included"]:
         file_str += (
-            f"\nconst unsigned short {file_name}Pal[{2**bpp}] "
+            f"\nconst unsigned short {file_name}_PAL[{2**bpp}] "
             "__attribute__((aligned(2))) __attribute__((visibility(\"hidden\")))= \n{\n"
         )
 

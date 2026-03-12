@@ -9,23 +9,23 @@
 //	+ Number of Bytes : 1024
 //	+ Number of U32   : 256
 //	+ Blank Color     : 0x5d53
-//	2026-03-08 04:18:41.320737
+//	2026-03-12 15:57:29.590594
 //======================================================================
 
 /**
  * @brief The number of tiles to make Sprite6. 
  * 
  */
-#define Sprite6TileAmount 32
+#define Sprite6_TILE_COUNT 32
 
 /**
  * @brief The number of bytes Sprite6 occupies. 
  * 
  */
-#define Sprite6TilesLen 1024
+#define Sprite6_TILE_BYTES 1024
 
 /**
  * @brief The array of Palette indices (4 packed into one uint) to create Sprite6 in Tiles. 
  * 
  */
-extern const unsigned int Sprite6Tiles[256];
+extern const unsigned int Sprite6_TILES[256];

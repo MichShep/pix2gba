@@ -3,11 +3,11 @@
     "Sprite5": {
         "unit": "868d2fca2e00b7154e106aaf21dd2aac14ffa7f029a5a67fa7f829ded9472399",
         "image": "ba0046adf2840796de5e2129515c5046a145895c6a2196af9311eb47bd9907c0",
-        "version": "0.4.0"
+        "version": "0.5.0"
     },
     "InventoryBackground": {
         "unit": "b96033a959be99f8d51c838b098b203fd67f24cc9403e058a7749e8959da6fa1",
         "image": "5aeac79182c23fbd8755b4d8e8479e6df69cf0430c3c90e59418bb6a1232a198",
-        "version": "0.4.0"
+        "version": "0.5.0"
     }
 }

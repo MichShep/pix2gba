@@ -9,40 +9,40 @@
 //	+ Number of Bytes : 768
 //	+ Number of U32   : 192
 //	+ Blank Color     : 0x5d53
-//	2026-03-08 04:18:41.208535
+//	2026-03-12 15:57:29.479238
 //======================================================================
 
 /**
  * @brief The number of tiles to make Sprite5. 
  * 
  */
-#define Sprite5TileAmount 24
+#define Sprite5_TILE_COUNT 24
 
 /**
  * @brief The number of bytes Sprite5 occupies. 
  * 
  */
-#define Sprite5TilesLen 768
+#define Sprite5_TILE_BYTES 768
 
 /**
  * @brief The array of Palette indices (4 packed into one uint) to create Sprite5 in Tiles. 
  * 
  */
-extern const unsigned int Sprite5Tiles[192];
+extern const unsigned int Sprite5_TILES[192];
 
 /**
  * @brief The array of Tile indices to create Sprite5 from other Tiles after deduping. 
  * 
  */
-extern const unsigned int Sprite5TileMapping[24];
+extern const unsigned short Sprite5_TILE_MAPPING[24];
 
 /**
  * @brief The number of bytes the Palette for Sprite5 occupies. 
  * 
  */
-#define Sprite5PalLen 8
+#define Sprite5_PAL_LEN 8
 
 /**
  * @brief The array of rgb5 (short) numbers that create Sprite5's Palette. 
  */
-extern const unsigned short Sprite5Pal[4];
+extern const unsigned short Sprite5_PAL[4];

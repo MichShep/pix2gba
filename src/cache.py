@@ -3,7 +3,7 @@ from PIL import Image
 import json
 import hashlib
 
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 
 from .units import ConversionUnit, ConversionConfig
 

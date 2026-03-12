@@ -9,40 +9,40 @@
 //	+ Number of Bytes : 19200
 //	+ Number of U32   : 4800
 //	+ Blank Color     : 0x5d53
-//	2026-03-08 04:18:41.313700
+//	2026-03-12 15:57:29.582890
 //======================================================================
 
 /**
  * @brief The number of tiles to make InventoryBackground. 
  * 
  */
-#define InventoryBackgroundTileAmount 600
+#define InventoryBackground_TILE_COUNT 600
 
 /**
  * @brief The number of bytes InventoryBackground occupies. 
  * 
  */
-#define InventoryBackgroundTilesLen 19200
+#define InventoryBackground_TILE_BYTES 19200
 
 /**
  * @brief The array of Palette indices (4 packed into one uint) to create InventoryBackground in Tiles. 
  * 
  */
-extern const unsigned int InventoryBackgroundTiles[4800];
+extern const unsigned int InventoryBackground_TILES[4800];
 
 /**
  * @brief The array of Tile indices to create InventoryBackground from other Tiles after deduping. 
  * 
  */
-extern const unsigned int InventoryBackgroundTileMapping[600];
+extern const unsigned short InventoryBackground_TILE_MAPPING[600];
 
 /**
  * @brief The number of bytes the Palette for InventoryBackground occupies. 
  * 
  */
-#define InventoryBackgroundPalLen 26
+#define InventoryBackground_PAL_LEN 26
 
 /**
  * @brief The array of rgb5 (short) numbers that create InventoryBackground's Palette. 
  */
-extern const unsigned short InventoryBackgroundPal[13];
+extern const unsigned short InventoryBackground_PAL[13];

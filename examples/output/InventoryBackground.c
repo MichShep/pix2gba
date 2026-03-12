@@ -1,4 +1,4 @@
-const unsigned int InventoryBackgroundTiles[4800] __attribute__((aligned(4))) __attribute__((visibility("hidden")))=
+const unsigned int InventoryBackground_TILES[4800] __attribute__((aligned(4))) __attribute__((visibility("hidden")))=
 {
 	0x44444434, 0x44444434, 0x44444334, 0x44443344, 0x44444444, 0x44344444, 0x44344444, 0x44344444,
 	0x44444444, 0x44444444, 0x44443444, 0x44433444, 0x44434444, 0x44444444, 0x44444444, 0x44444444,
@@ -125,7 +125,7 @@ const unsigned int InventoryBackgroundTiles[4800] __attribute__((aligned(4))) __
 	0x88819a1b, 0x88819aba, 0x88819aa9, 0x88819991, 0x88811118, 0x88888888, 0x88888888, 0x88888888,
 };
 
-const unsigned char InventoryBackgroundTileMapping[600] = 
+const unsigned short InventoryBackground_TILE_MAPPING[600] = 
 {
 	0, 1, 2, 3, 4, 5, 6, 7, 
 	8, 9, 10, 11, 12, 13, 14, 15, 
@@ -204,7 +204,7 @@ const unsigned char InventoryBackgroundTileMapping[600] =
 	17, 17, 17, 17, 17, 17, 17, 18, 
 };
 
-const unsigned short InventoryBackgroundPal[16] __attribute__((aligned(2))) __attribute__((visibility("hidden")))= 
+const unsigned short InventoryBackground_PAL[16] __attribute__((aligned(2))) __attribute__((visibility("hidden")))= 
 {
 	0x5d53, 0x0441, 0x10a4, 0x18c6, 0x1ce7, 0x0068, 0x006a, 0x008c,
 	0x0cce, 0x0db8, 0x0ddb, 0x121e, 0x0441

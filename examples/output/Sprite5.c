@@ -1,4 +1,4 @@
-const unsigned int Sprite5Tiles[192] __attribute__((aligned(4))) __attribute__((visibility("hidden")))=
+const unsigned int Sprite5_TILES[192] __attribute__((aligned(4))) __attribute__((visibility("hidden")))=
 {
 	0x11111111, 0x22222221, 0x22222221, 0x22222221, 0x22222221, 0x22222221, 0x22222221, 0x22222221,
 	0x11111111, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222,
@@ -16,14 +16,14 @@ const unsigned int Sprite5Tiles[192] __attribute__((aligned(4))) __attribute__((
 	0x12222222, 0x12222222, 0x12222222, 0x12222222, 0x12222222, 0x12222222, 0x12222222, 0x11111111,
 };
 
-const unsigned char Sprite5TileMapping[24] = 
+const unsigned short Sprite5_TILE_MAPPING[24] = 
 {
 	0, 1, 1, 1, 2, 3, 3, 3, 
 	1, 4, 5, 1, 3, 6, 3, 3, 
 	7, 8, 1, 9, 10, 11, 3, 12, 
 };
 
-const unsigned short Sprite5Pal[16] __attribute__((aligned(2))) __attribute__((visibility("hidden")))= 
+const unsigned short Sprite5_PAL[16] __attribute__((aligned(2))) __attribute__((visibility("hidden")))= 
 {
 	0x5d53, 0x0000, 0x4e52, 0x0000
 };

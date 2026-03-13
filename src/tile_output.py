@@ -59,6 +59,37 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
     num_bytes_output = str(num_bytes) + f" -> {len(output_data.compress_data)} (compressed)" if unit_data.compress else str(
         num_bytes)
 
+    size_output = ""
+    if unit_data.compress or unit_data.dedupe:
+        bytes_per_tile = 8 * bpp
+        no_size = num_tiles * bytes_per_tile
+
+        dedupe_size = 0
+        if unit_data.dedupe:
+            dedupe_size = num_tiles * 2 + output_data.unique_tiles * bytes_per_tile
+
+        compress_size = 0
+        if unit_data.compress:
+            compress_size = len(output_data.compress_data)
+
+        size_output = f"//\t+ Saved Size      : Base {no_size}B"
+
+        current_size = no_size
+
+        if unit_data.dedupe:
+            size_output += f" + Deduping"
+            current_size = dedupe_size
+
+        if unit_data.compress:
+            size_output += f" + Compression"
+            current_size = compress_size + (num_tiles * 2 if unit_data.dedupe else 0)
+
+        perc = (1 - current_size / no_size) * 100
+        size_output += f" = {current_size}B ({perc:.2f}% reduction)\n"
+
+
+
+
     # Detailed metadata block
     file_str += (
         "//======================================================================\n" +
@@ -69,6 +100,7 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
                  "//\t+ Number of Bytes : " + num_bytes_output + "\n" +
                  "//\t+ Number of U32   : " + str(num_u32) + "\n" +
                  "//\t+ Blank Color     : " + hex(output_data.gba_palette[0]) + "\n" +
+                 size_output +
                  "//======================================================================\n\n"
                  )
     # Tile count macro

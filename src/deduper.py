@@ -20,7 +20,6 @@ def _compare_lists(l1: list, l2: list) -> bool:
 
 
 def dedupe_tiles(hex_list: list, bpp: int) -> dict:
-    print(" \t Deduping...")
 
     # 1. Convert hex strings to ints
     int_list = [int(h, 16) for h in hex_list]
@@ -63,7 +62,6 @@ def dedupe_tiles(hex_list: list, bpp: int) -> dict:
                 unique_tile_ids.append(i)
                 tile_mapping.append(len(unique_tile_ids) - 1)
 
-    print(f" \t\t Deduped from {len(tile_list)} to {len(unique_tile_ids)} tiles!")
 
     # 5. Build final tile list
     final_list = []

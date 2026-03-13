@@ -9,6 +9,7 @@
 //	+ Number of Bytes : 3520 -> 1024 (compressed)
 //	+ Number of U32   : 880
 //	+ Blank Color     : 0x5d53
+//	+ Saved Size      : Base 19200B + Deduping + Compression = 2224B (88.42% reduction)
 //======================================================================
 
 /**

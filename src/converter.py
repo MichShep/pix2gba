@@ -9,6 +9,7 @@ from .deduper import dedupe_tiles
 from .compressor import gba_lz77_compress_list
 # Outputs
 from .tile_output import make_output
+from . import cli_log as log
 
 def run_conversion(unit: ConversionUnit, simulate=False) -> UnitOutput:
     # Step 1: Create GBA palette
@@ -50,19 +51,27 @@ def run_conversion(unit: ConversionUnit, simulate=False) -> UnitOutput:
         unique_tiles = (len(u32_data) * 4) // tile_size_bytes
     )
 
+    if not simulate:
+        log.indent()
+
     # Step 4: Attempt deduping
     if unit.dedupe and not simulate:
+        log.info("Starting Deduping...")
         dedupe_dict = dedupe_tiles(u32_data, unit.bpp)
         output_data.u32_data = dedupe_dict["final_list"]
         output_data.tile_mapping = dedupe_dict["tile_mapping"]
         output_data.unique_tiles = dedupe_dict["unique_tile_count"]
+        log.ok(f"Deduping complete. ({output_data.num_tiles} -> {output_data.unique_tiles})")
 
     # Step 5: Attempt Compression
     if unit.compress and not simulate:
+        log.info("Starting Compressing...")
         output_data.compress_data = gba_lz77_compress_list(output_data.u32_data)
+        log.ok(f"Compression Complete. ({len(output_data.u32_data)*4} -> {len(output_data.compress_data)})")
 
     # Step 6: Create Output OR pass out stuff
     if not simulate:
+        log.dedent()
         make_output(unit, output_data)
         return None
 

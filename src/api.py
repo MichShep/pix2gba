@@ -107,6 +107,7 @@ def build_outputs():
             log.summary(f"Converting...")
             run_conversion(converted_unit)
             log.ok(f"Converted.")
+
             successful_units += [converted_unit]
             local_success += [converted_unit]
             stats.successful_conversions += 1

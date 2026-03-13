@@ -9,6 +9,7 @@
 //	+ Number of Bytes : 1024 -> 344 (compressed)
 //	+ Number of U32   : 256
 //	+ Blank Color     : 0x5d53
+//	+ Saved Size      : Base 1024B + Compression = 344B (66.41% reduction)
 //======================================================================
 
 /**

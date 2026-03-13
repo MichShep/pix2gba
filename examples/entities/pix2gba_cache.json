@@ -1,23 +1,13 @@
 {
     "default": "2b8cce536abea6a4b0c9e27767b1fe4fb3cc44e4e7f11ca988da7af67eefb8da",
-    "Sprite5": {
-        "unit": "868d2fca2e00b7154e106aaf21dd2aac14ffa7f029a5a67fa7f829ded9472399",
-        "image": "ba0046adf2840796de5e2129515c5046a145895c6a2196af9311eb47bd9907c0",
-        "version": "0.5.0"
-    },
-    "Sprite9": {
-        "unit": "7ba73b4104de59cddb6409dba0b4abc48580cc63aac6218ce420cfb03aac4dd1",
-        "image": "5aeac79182c23fbd8755b4d8e8479e6df69cf0430c3c90e59418bb6a1232a198",
-        "version": "0.5.0"
-    },
     "Sprite6": {
         "unit": "0a3db8aaaf1636d6c6a15944bc51af04095f2575348175263247ef276510a32c",
         "image": "a1c0ad54511429a55a8cc034e719e391fb649b3bcb343176064be9bbab3f4168",
-        "version": "0.5.0"
+        "version": "0.6.0"
     },
     "Sprite8": {
         "unit": "a85d711402ec3f0562ec56926bc9c7cbc5dbd5cc140e35baaa1c54f3ba8120cf",
         "image": "ab9e2a37ba58349d67c2110a2dfd6585889993dd1f92710004ece9537ccbe65e",
-        "version": "0.5.0"
+        "version": "0.6.0"
     }
 }

@@ -77,6 +77,7 @@ def build_outputs():
 
         # Load in the cache
         cache_dict = get_cache_dict(build_path)
+        local_success = []
 
         # Go through each unit path
         for unit_data in toml_data["unit"]:
@@ -107,6 +108,7 @@ def build_outputs():
             run_conversion(converted_unit)
             log.ok(f"Converted.")
             successful_units += [converted_unit]
+            local_success += [converted_unit]
             stats.successful_conversions += 1
             log.dedent()
 
@@ -114,7 +116,7 @@ def build_outputs():
         log.dedent()
 
         log.summary("Updating Cache...")
-        create_cache(default_unit, successful_units)
+        create_cache(default_unit, local_success)
         log.ok("Cache Updated.")
 
         log.ok("Build Directory Finished\n", build_path.relative_to(ROOT_DIRECTORY))

@@ -4,7 +4,7 @@ import json
 import hashlib
 from . import cli_log as log
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 from .units import ConversionUnit
 
@@ -62,9 +62,9 @@ def needs_rebuild(path: Path, unit: ConversionUnit, cache_dict: dict) -> bool:
     image_hash = hash_image_pixels(path / f"{unit.name}.png")
 
     if (
-        old_hashes.get("unit") != unit_hash
-        or old_hashes.get("image") != image_hash
-        or old_hashes.get("version") != VERSION
+        old_hashes.get("unit", "") != unit_hash
+        or old_hashes.get("image", "") != image_hash
+        or old_hashes.get("version", "") != VERSION
     ):
         return True
 

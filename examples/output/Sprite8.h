@@ -33,7 +33,7 @@
  * @brief The byte stream to decompress Sprite8 to tile data. 
  * 
  */
-extern const unsigned char Sprite8_COMPRESSION_LEN[344];
+extern const unsigned char Sprite8_COMPRESSION[344];
 
 /**
  * @brief The number of bytes the Palette for Sprite8 occupies. 

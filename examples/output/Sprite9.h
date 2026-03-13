@@ -33,7 +33,7 @@
  * @brief The byte stream to decompress Sprite9 to tile data. 
  * 
  */
-extern const unsigned char Sprite9_COMPRESSION_LEN[1024];
+extern const unsigned char Sprite9_COMPRESSION[1024];
 
 /**
  * @brief The array of Tile indices to create Sprite9 from other Tiles after deduping. 

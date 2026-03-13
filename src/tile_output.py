@@ -98,7 +98,7 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
                      " * @brief The byte stream to decompress " + file_name + " to tile data. \n" +
                      " * \n" +
                      " */\n")
-        file_str += "extern const unsigned char " + file_name + "" + OUTPUT_VAR_NAMES["compression length"] + "[" + str(num_bytes) + "];\n"
+        file_str += "extern const unsigned char " + file_name + "" + OUTPUT_VAR_NAMES["compression"] + "[" + str(num_bytes) + "];\n"
 
     else:
         # External tile data declaration

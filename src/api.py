@@ -98,7 +98,7 @@ def build_outputs():
             log.ok(f"Validated.")
 
             # If the same cache then ignore
-            if not needs_rebuild(build_path, converted_unit, cache_dict):
+            if converted_unit.cache and not needs_rebuild(build_path, converted_unit, cache_dict):
                 stats.total_cached += 1
                 log.dedent()
                 continue

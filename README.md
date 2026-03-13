@@ -6,7 +6,7 @@ A Python-based tool for converting standard image formats (PNG, JPEG) into GBA-c
 
 `pix2gba` is a tile and palette converter designed for Game Boy Advance development. It is used to generate `.c` and `.h` files from images based on configuration stored in TOML files, with the option to compress and dedupe the data. The tool supports multiple conversion units per project and is well-suited for automation or large asset pipelines.
 
-This updated version uses a declarative configuration model (via `pix2gba.toml`) and can be run using simple system commands.
+This version uses a declarative configuration model (via `pix2gba.toml`) and can be run using simple system commands.
 
 ## Installation
 
@@ -51,14 +51,14 @@ pix2gba view Img  # View how the image will look on the GBA with the given setup
 | `view` `name` | View how a unit will look on the GBA given the data in `pix2gba.toml` |
 | `verify`      | Verifys all units in project can be inputted into GBA Hardware        |
 | `byte` `name`  | Creates a binary file of the unit's converted data in the project root                   |
-
+| `help`        | Displays descriptions of every valid command|
 
 ## TOML Configuration
 
 ### How to Set It Up
 
 1. **Create a `pix2gba.toml` file** in each folder where your images are located.
-2. Each TOML file defines conversion rules for that specific directory.
+2. Each TOML file contains a user-defined default conversion rules that each unit can choose to overwrite for their conversion.
 3. You can have multiple TOML files across your project to group image conversions logically.
 4. When you run `pix2gba make` from the root directory, it will:
    - **Recursively search** all subdirectories for `pix2gba.toml` files
@@ -91,43 +91,49 @@ pix2gba make
 
 All `pix2gba.toml` files in `sprites/`, `backgrounds/`, etc. will be discovered and processed.
 
-
-The `pix2gba.toml` file defines the global settings and individual conversion units.
-
-**Note** that if a field is not provided a default value will be supplied and noted
+**Note** All fields can be defaulted to the default rules **except** for name
 
 ### Example
 
 ```toml
-[general]
+[default]
 bpp = 4
 transparent = "0x5D53"
 output_type = "both"
-destination = "./gfx"
-
-[[unit]]
-name = "sprite1"
-metatile_width = 5
-metatile_height = 5
+destination = "./gfx/"
+name = ""
+metatile_width = 1
+metatile_height = 1
 palette = ""
-palette_include = 1
-generate_palettes = 1
+palette_include = 0
+generate_palette = 0
 compress = 0
-dedupe = 1
+dedupe = 0
+cache = 1
+
 
 [[unit]]
-name = "sprite2"
+name = "Sprit1"
 metatile_width = 4
 metatile_height = 4
-palette = "root/pals/pal1.png"
-palette_include = 0
-generate_palettes = 0
+palette = ""
+palette_include = 1
+generate_palette = 0
 compress = 1
 dedupe = 0
 
+[[unit]]
+name = "Sprit2"
+metatile_width = 4
+metatile_height = 5
+palette = "./pals/path"
+generate_palette = 1
+compress = 0
+dedupe = 1
+
 ```
 
-### [general] section
+### Conversion Rules
 
 | Key              | Type   | Description                                                         |
 |------------------|--------|---------------------------------------------------------------------|
@@ -135,13 +141,6 @@ dedupe = 0
 | `transparent`    | str    | RGB15 hex value for transparent color (e.g., `"0x5D53"`)            |
 | `output_type`    | str    | Output format: `"h"`, `"c"`, or `"both"`                            |
 | `destination`    | path   | Output directory for generated files (relative to the project root) |
-
-### [[unit]] section
-
-Each `unit` represents a single image to convert.
-
-| Key                | Type | Description                                                                   |
-|--------------------|------|-------------------------------------------------------------------------------|
 | `name`             | str  | Name of the image file (without `.png`)                                       |
 | `metatile_width`   | int  | Number of 8x8 tiles per metatile width                                        |
 | `metatile_height`  | int  | Number of 8x8 tiles per metatile height                                       |
@@ -150,6 +149,7 @@ Each `unit` represents a single image to convert.
 | `generate_palette` | bool | Whether to export a PNG file containing the used palette of the unit (0 or 1) |
 | `compress`         | bool | Whether to compress the resulting tile data                                   |
 | `dedupe`           | bool | Whether to dedupe (remove duplicate tiles) tiles                              |
+| `cache`           | bool | Whether to check if the unit is in the cache (will always compile if 0) |
 
 
 ## Features
@@ -196,7 +196,7 @@ For every unit defined in `pix2gba.toml`, the tool calculates three hashes:
 
 | Hash Type | What It Tracks |
 |-----------|---------------|
-| **Configuration Hash** | Global `[general]` TOML settings |
+| **Default Hash** | Global `[default]` TOML settings |
 | **Unit Hash** | The `[[unit]]` configuration values |
 | **Image Hash** | The raw pixel data of the `.png` file |
 
@@ -206,7 +206,7 @@ Example cache file:
 
 ```json
 {
-    "configuration": "6f1a5c7d1d7a...",
+    "default": "6f1a5c7d1d7a...",
     "player": {
         "unit": "c4c8a5c01d4...",
         "image": "f3a8f9b74c1...",
@@ -300,9 +300,11 @@ LZ77UnCompVram(compressedTiles, destinationInVRAM);
 LZ77UnCompWram(compressedTiles, destinationInWRAM);
 ```
 
+**Note:** If deduping, the compressed tiles will be the deduped tileset and the tile mapping is not compressed.
+
 ---
 ### Deduping
-Large sprites and backgrounds often contain many identical 8x8 tiles, especially in flat regions, repeated patterns, or symmetrical artwork. Storing these tiles multiple times wastes both ROM space and limited VRAM.
+Large sprites and backgrounds often contain many identical 8x8 tiles, especially in flat regions, big backgrounds, or patterned artwork. Storing these tiles multiple times wastes both ROM space and limited VRAM.
 
 Deduplication analyzes all tiles within a unit and eliminates exact duplicates, ensuring that each unique tile is stored only once.
 
@@ -313,8 +315,3 @@ When deduplication is enabled:
 - A tilemap is generated that remaps the original tile layout to indices in the deduplicated tileset.
 
 Because the GBA renders tiles by index, this optimization incurs no runtime cost while significantly reducing memory usage.
-
---- 
-## License
-
-This project is licensed under the MIT License.

@@ -3,6 +3,7 @@ import os.path
 from PIL import Image as PILImage
 from .gba_utils import rgb24_to_rgb15, unpack_gba_color
 import numpy as np
+from . import cli_log as log
 
 def float_transparent_color(gba_palette:list, transparent:int) -> list:
     """
@@ -35,14 +36,14 @@ def extract_palette_img(filename:str, bpp:int, transparent:int) -> list:
     :return: List of GBA RGB15 palette entries.
     """
     if not os.path.exists(filename):
-        print("ERROR: Path to palette image file doesn't exist")
+        log.error("Path to palette image file doesn't exist")
         return None
 
     img = PILImage.open(filename).convert("RGB")
     width, height = img.size
 
     if (width * height) > (1 << bpp):
-        print(f"ERROR: Too many pixels for bpp (curr: {width * height}; max: {(1 << bpp)}) ")
+        log.error(f"Too many pixels for bpp (curr: {width * height}; max: {(1 << bpp)}) ")
         return None
 
     gba_palette = []

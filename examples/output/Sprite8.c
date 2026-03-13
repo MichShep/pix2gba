@@ -1,4 +1,4 @@
-const unsigned char Sprite8Compression[344] __attribute__((aligned(4))) __attribute__((visibility("hidden")))=
+const unsigned char Sprite8_COMPRESSION[344] __attribute__((aligned(4))) __attribute__((visibility("hidden")))=
 {
 	0x10, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xF0, 0x07,
@@ -50,7 +50,7 @@ const unsigned char Sprite8Compression[344] __attribute__((aligned(4))) __attrib
 	0x03, 0xF0, 0x4A, 0xC0, 0xF0, 0x07, 0x00, 0x07,
 };
 
-const unsigned short Sprite8Pal[16] __attribute__((aligned(2))) __attribute__((visibility("hidden")))= 
+const unsigned short Sprite8_PAL[16] __attribute__((aligned(2))) __attribute__((visibility("hidden")))= 
 {
 	0x5d53, 0x2108, 0x2d8c, 0x266f, 0x2733, 0x5ef7, 0x375a, 0x7fff,
 	0x2108

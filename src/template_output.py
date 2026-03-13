@@ -7,11 +7,20 @@ def add_template_file(project_root: Path):
     :return:
     """
     template = """# Template pix2gba TOML (move into directory and remove `_output` from toml name
-[general]
+[default]
 bpp = 4
 transparent = "0x5D53"
 output_type = "both"
-destination = "./destination"
+destination = "./path"
+name = ""
+metatile_width = 0
+metatile_height = 0
+palette = "./path.png"
+palette_include = 0
+generate_palette = 0
+compress = 0
+dedupe = 0
+cache = 0
 
 [[unit]]
 name = "unit name"

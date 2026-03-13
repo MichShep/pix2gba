@@ -2,10 +2,11 @@ from pathlib import Path
 from PIL import Image
 import json
 import hashlib
+from . import cli_log as log
 
 VERSION = "0.5.0"
 
-from .units import ConversionUnit, ConversionConfig
+from .units import ConversionUnit
 
 
 def hash_dict(data):
@@ -21,18 +22,6 @@ def hash_image_pixels(path):
     return h.hexdigest()
 
 
-def _hash_unit_config(config: ConversionConfig):
-    config_dict = {
-        "bpp": config.bpp,
-        "root": str(config.root_dir),
-        "output": str(config.output_dir),
-        "transparent": config.transparent,
-        "type": config.output_type,
-    }
-
-    return hash_dict(config_dict)
-
-
 def _hash_unit_dict(unit: ConversionUnit):
     unit_dict = {
         "metatile_width": unit.metatile_width,
@@ -46,90 +35,73 @@ def _hash_unit_dict(unit: ConversionUnit):
 
     return hash_dict(unit_dict)
 
+def get_cache_dict(build_path: Path)-> dict:
+    cache_path = build_path / "pix2gba_cache.json"
 
-def read_caches(potential_units: dict[Path, list[ConversionUnit]]):
+    if not cache_path.exists():
+        return {}
+
+    with open(cache_path, "r") as f:
+        return json.load(f)
+
+def needs_rebuild(path: Path, unit: ConversionUnit, cache_dict: dict) -> bool:
     """
-    Removes units from potential_units that do not need rebuilding.
+    Returns True if the unit needs rebuilding, False otherwise.
+    Assumes cache_dict was already read from pix2gba_cache.json.
     """
 
-    for path in potential_units.keys():
+    unit_hash = _hash_unit_dict(unit)
 
-        cache_path = path / "pix2gba_cache.json"
+    old_hashes = cache_dict.get(unit.name)
 
-        if not cache_path.exists():
-            continue
+    # Unit not cached → rebuild
+    if old_hashes is None:
+        return True
 
-        with open(cache_path, "r") as f:
-            cache_dict = json.load(f)
+    # Only compute image hash if needed
+    image_hash = hash_image_pixels(path / f"{unit.name}.png")
 
-        if len(potential_units[path]) == 0:
-            continue
+    if (
+        old_hashes.get("unit") != unit_hash
+        or old_hashes.get("image") != image_hash
+        or old_hashes.get("version") != VERSION
+    ):
+        return True
 
-        config_hash = _hash_unit_config(potential_units[path][0].config)
-
-        # If config changed rebuild everything
-        if cache_dict.get("configuration") != config_hash:
-            continue
-
-        rebuild_units = []
-
-        for unit in potential_units[path]:
-
-            unit_hash = _hash_unit_dict(unit)
-            image_hash = hash_image_pixels(path / f"{unit.name}.png")
-
-            old_hashes = cache_dict.get(unit.name)
-
-            # Unit not cached then rebuild
-            if old_hashes is None:
-                rebuild_units.append(unit)
-                continue
-
-            if (
-                old_hashes.get("unit") != unit_hash
-                or old_hashes.get("image") != image_hash
-                or old_hashes.get("version") != VERSION
-            ):
-                rebuild_units.append(unit)
-            else:
-                print(" \t Skip rebuilding unit " + unit.name)
-
-        potential_units[path] = rebuild_units
+    log.cache("no changes compared to cache")
+    return False
 
 
-def create_caches(unit_paths: dict[Path, list[ConversionUnit]], failed_units: list[ConversionUnit]):
+def create_cache(default_unit: ConversionUnit, passed_units: list[ConversionUnit]):
     """
     Updates cache files after conversion.
     """
-    for path in unit_paths:
-        cache_file = path / "pix2gba_cache.json"
+    cache_file = default_unit.root_dir / "pix2gba_cache.json"
 
-        # Load existing cache so valid units are preserved
-        if cache_file.exists():
-            with open(cache_file, "r") as file:
-                cache_dict = json.load(file)
-        else:
-            cache_dict = {}
+    # Load existing cache so valid units are preserved
+    if cache_file.exists():
+        with open(cache_file, "r") as file:
+            cache_dict = json.load(file)
+    else:
+        cache_dict = {}
 
-        if len(unit_paths[path]) == 0:
-            continue
+    if len(passed_units) == 0:
+        return
 
-        config = unit_paths[path][0].config
-        cache_dict["configuration"] = _hash_unit_config(config)
+    # Create default hash
+    default_hash = _hash_unit_dict(default_unit)
 
-        for unit in unit_paths[path]:
+    cache_dict["default"] = default_hash
 
-            if unit in failed_units:
-                continue
+    for unit in passed_units:
+        unit_hash = _hash_unit_dict(unit)
+        image_hash = hash_image_pixels(unit.image_path)
 
-            unit_hash = _hash_unit_dict(unit)
-            image_hash = hash_image_pixels(path / f"{unit.name}.png")
+        cache_dict[unit.name] = {
+            "unit": unit_hash,
+            "image": image_hash,
+            "version": VERSION,
+        }
 
-            cache_dict[unit.name] = {
-                "unit": unit_hash,
-                "image": image_hash,
-                "version": VERSION,
-            }
-
-        with open(cache_file, "w") as file:
-            json.dump(cache_dict, file, indent=4)
+    with open(cache_file, "w") as file:
+        json.dump(cache_dict, file, indent=4)

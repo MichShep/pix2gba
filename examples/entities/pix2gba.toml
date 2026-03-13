@@ -1,35 +1,30 @@
-[general]
+[default]
 bpp = 4
 transparent = "0x5D53"
 output_type = "both"
 destination = "./examples/output"
-
-[[unit]]
-name = "Sprite6"
-metatile_width = 4
-metatile_height = 4
-palette = "./examples/entities/Sprite6_palette.png"
-palette_include = 0
-generate_palette = 1
-compress = 0
-dedupe = 0
-
-[[unit]]
-name = "Sprite7"
-metatile_width = 4
-metatile_height = 4
-palette = "./faulty_path"
-palette_include = 0
-generate_palette = 1
-compress = 1
-dedupe = 0
-
-[[unit]]
-name = "Sprite8"
+name = ""
 metatile_width = 4
 metatile_height = 4
 palette = ""
-palette_include = 1
+palette_include = 0
 generate_palette = 0
-compress = 1
+compress = 0
 dedupe = 0
+cache = 1
+
+[[unit]]
+name = "Sprite6"
+palette = "./examples/entities/Sprite6_palette.png"
+generate_palette = 0
+
+[[unit]]
+name = "Sprite7"
+palette = "./faulty_path"
+generate_palette = 1
+compress = 1
+
+[[unit]]
+name = "Sprite8"
+palette_include = 1
+compress = 1

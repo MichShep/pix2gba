@@ -19,7 +19,7 @@ def _compare_lists(l1: list, l2: list) -> bool:
     return True
 
 
-def dedupe_tiles(hex_list: list, bpp: int) -> tuple[list[str], list[int]]:
+def dedupe_tiles(hex_list: list, bpp: int) -> dict:
     print(" \t Deduping...")
 
     # 1. Convert hex strings to ints
@@ -73,4 +73,10 @@ def dedupe_tiles(hex_list: list, bpp: int) -> tuple[list[str], list[int]]:
 
     final_list = ["0x{:08x}".format(i) for i in final_list]
 
-    return final_list, tile_mapping
+    output_dict = {
+        "final_list": final_list,
+        "tile_mapping": tile_mapping,
+        "unique_tile_count": len(unique_tile_ids)
+    }
+
+    return output_dict

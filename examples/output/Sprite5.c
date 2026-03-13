@@ -1,4 +1,4 @@
-const unsigned int Sprite5_TILES[192] __attribute__((aligned(4))) __attribute__((visibility("hidden")))=
+const unsigned int Sprite5_TILES[104] __attribute__((aligned(4))) __attribute__((visibility("hidden")))=
 {
 	0x11111111, 0x22222221, 0x22222221, 0x22222221, 0x22222221, 0x22222221, 0x22222221, 0x22222221,
 	0x11111111, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222,

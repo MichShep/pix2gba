@@ -1,4 +1,4 @@
-// Sprite6 on Sprite6_palette Palette
+// Sprite6; on palette Sprite6_palette.png
 #pragma once
 
 //======================================================================
@@ -9,7 +9,6 @@
 //	+ Number of Bytes : 1024
 //	+ Number of U32   : 256
 //	+ Blank Color     : 0x5d53
-//	2026-03-12 15:57:29.590594
 //======================================================================
 
 /**

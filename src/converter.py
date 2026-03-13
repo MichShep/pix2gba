@@ -1,107 +1,69 @@
-# gba_converter/converter.py
 import os
-
+# Helpers
+import struct
+from .units import ConversionUnit, UnitOutput
 from .palette import extract_palette_img, palette_from_img, create_conversion_table
-from .tile_output import make_output
+# Actual Converters
 from .tile_creator import create_tile_data
-from .compress_output import make_compress_output
+from .deduper import dedupe_tiles
+from .compressor import gba_lz77_compress_list
+# Outputs
+from .tile_output import make_output
 
-def run_conversion(args: dict) -> bool:
-    """
-    Main conversion workflow.
-
-    :param args: Namespace from argparse.
-    """
-
+def run_conversion(unit: ConversionUnit, simulate=False) -> UnitOutput:
     # Step 1: Create GBA palette
     #print("* Extracting Palette...")
-    if args["palette_path"]:
+    if unit.palette_path != "":
         gba_palette = extract_palette_img(
-            filename=args["palette_path"],
-            bpp=args["bpp"],
-            transparent=args["transparent"]
+            filename=str(unit.palette_path),
+            bpp=unit.bpp,
+            transparent=int(unit.transparent, 16)
         )
         if gba_palette is None:
-            return True
+            return None
     else:
         gba_palette = palette_from_img(
-            filename=args["image_path"],
-            bpp=args["bpp"],
-            transparent=args["transparent"]
+            filename=str(unit.image_path),
+            bpp=unit.bpp,
+            transparent=int(unit.transparent, 16)
         )
 
     # Step 2: Create conversion table
     #print("* Creating Color Conversion Table...")
     conversion_table = create_conversion_table(
-        input_img=args["image_path"],
+        input_img=str(unit.image_path),
         gba_palette=gba_palette,
     )
 
-    # Step 3: Generate .h and/or .c output
+    # Step 3: Create the base tile with no extras
     #print("* Generating C/Header Output...")
-    if args["compress"]:
-        make_compress_output(
-            arguments=args,
-            conversion_table=conversion_table,
-            gba_palette=gba_palette
-        )
-    else:
-        make_output(
-            arguments=args,
-            conversion_table=conversion_table,
-            gba_palette=gba_palette
-        )
+    u32_data = create_tile_data(unit, conversion_table)
 
-    return False
+    tile_size_bytes = 32 if unit.bpp == 4 else 64
 
-
-def clean_conversion(args: dict) -> None:
-    output_path = args["destination_path"]
-    image_name = args["image_name"]
-
-    # Clear h files
-    if os.path.exists(f"{output_path}/{image_name}.h"):
-        os.remove(f"{output_path}/{image_name}.h")
-
-    # Clear c files
-    if os.path.exists(f"{output_path}/{image_name}.c"):
-        os.remove(f"{output_path}/{image_name}.c")
-
-    # Clear palette files
-    if os.path.exists(f"{output_path}/{image_name}_palette.png"):
-        os.remove(f"{output_path}/{image_name}_palette.png")
-
-def simulate_conversion(args: dict) -> tuple[list, list]:
-    # Step 1: Create GBA palette
-    if args["palette_path"]:
-        gba_palette = extract_palette_img(
-            filename=args["palette_path"],
-            bpp=args["bpp"],
-            transparent=args["transparent"]
-        )
-        if gba_palette is None:
-            exit(1)
-    else:
-        gba_palette = palette_from_img(
-            filename=args["image_path"],
-            bpp=args["bpp"],
-            transparent=args["transparent"]
-        )
-
-    # Step 2: Create conversion table
-    conversion_table = create_conversion_table(
-        input_img=args["image_path"],
-        gba_palette=gba_palette,
+    output_data = UnitOutput(
+        u32_data=u32_data,
+        num_tiles=(len(u32_data) * 4) // tile_size_bytes,
+        tile_mapping=[],
+        compress_data = bytes(0),
+        gba_palette = gba_palette,
+        unique_tiles = (len(u32_data) * 4) // tile_size_bytes
     )
 
-    # Step 3: Generate tile data
-    meta_w = args["meta_width"]
-    meta_h = args["meta_height"]
-    bpp = args["bpp"]
+    # Step 4: Attempt deduping
+    if unit.dedupe and not simulate:
+        dedupe_dict = dedupe_tiles(u32_data, unit.bpp)
+        output_data.u32_data = dedupe_dict["final_list"]
+        output_data.tile_mapping = dedupe_dict["tile_mapping"]
+        output_data.unique_tiles = dedupe_dict["unique_tile_count"]
 
-    file_path = args["image_path"]
+    # Step 5: Attempt Compression
+    if unit.compress and not simulate:
+        output_data.compress_data = gba_lz77_compress_list(output_data.u32_data)
 
-    final_array = create_tile_data(file_path, conversion_table, meta_w, meta_h, bpp)
+    # Step 6: Create Output OR pass out stuff
+    if not simulate:
+        make_output(unit, output_data)
+        return None
 
-    # Step 4: Return the tile data and the palette data
-    return final_array, gba_palette
+    return output_data

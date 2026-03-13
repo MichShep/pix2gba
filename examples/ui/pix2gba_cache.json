@@ -1,12 +1,12 @@
 {
-    "configuration": "20a9490279f31d112453d3717a188e57e9c29dc8d0306292b2307675bf61c075",
+    "default": "3819e22eb6bb6df22b4ba8a28a00a9a2daec591221c7ab598328828b14d9dc34",
     "Sprite5": {
         "unit": "868d2fca2e00b7154e106aaf21dd2aac14ffa7f029a5a67fa7f829ded9472399",
         "image": "ba0046adf2840796de5e2129515c5046a145895c6a2196af9311eb47bd9907c0",
         "version": "0.5.0"
     },
-    "InventoryBackground": {
-        "unit": "b96033a959be99f8d51c838b098b203fd67f24cc9403e058a7749e8959da6fa1",
+    "Sprite9": {
+        "unit": "7ba73b4104de59cddb6409dba0b4abc48580cc63aac6218ce420cfb03aac4dd1",
         "image": "5aeac79182c23fbd8755b4d8e8479e6df69cf0430c3c90e59418bb6a1232a198",
         "version": "0.5.0"
     }

@@ -1,6 +1,33 @@
 import argparse
-
+from . import cli_log as log
 from .api import build_outputs, clean_outputs, make_template, view_output, verify_inputs, create_byte_data
+
+def print_help():
+    """
+    Prints the pix2gba command help.
+    """
+    print("""
+pix2gba - Convert images into GBA tile data
+
+Usage:
+    pix2gba <command> [arguments]
+
+Commands:
+    make                Build all units found in the project
+    clean               Remove all generated output files
+    template            Create a default TOML template
+    verify              Verify that all units can convert correctly
+    view <unit name>    Preview how a unit will appear on the GBA
+    byte <unit name>    Output raw byte data for a unit
+    help                Show this help message
+
+Examples:
+    pix2gba make
+    pix2gba clean
+    pix2gba template
+    pix2gba view sprite6
+    pix2gba byte sprite7
+""")
 
 def main():
     """
@@ -12,8 +39,11 @@ def main():
     parser.add_argument('command_name', type=str, help='Command of pix2gba to run')
     raw_args, raw_extra = parser.parse_known_args()
 
+    if raw_args.command_name in ("help", "-h", "--help"):
+        print_help()
+
     # 'make' is for running the conversing on all the toml units
-    if raw_args.command_name == 'make':
+    elif raw_args.command_name == 'make':
         build_outputs()
 
     # 'clean' removes all the generated units
@@ -30,13 +60,13 @@ def main():
 
         # Make sure that the unit name is passed in
         if len(raw_extra) == 0:
-            print("ERROR: `view` requires the name of the image file")
+            log.error("`view` requires the name of the image file")
             parser.print_help()
             exit(1)
 
         # Make sure that only one unit is given
         if len(raw_extra) > 1:
-            print("ERROR: `view` takes only one unit name")
+            log.error("`view` takes only one unit name")
             parser.print_help()
             exit(1)
 
@@ -52,16 +82,19 @@ def main():
 
         # Make sure that a unit is provided
         if len(raw_extra) == 0:
-            print("ERROR: `byte` requires the name of the image file")
+            log.error("`byte` requires the name of the image file")
             parser.print_help()
             exit(1)
         # Make sure only one unit is provided
         if len(raw_extra) > 1:
-            print("ERROR: `byte` takes only one unit name")
+            log.error("`byte` takes only one unit name")
             parser.print_help()
             exit(1)
 
         create_byte_data(raw_extra[0])
+    else:
+        log.warn("No valid command given")
+        print_help()
 
 
 

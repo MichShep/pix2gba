@@ -16,7 +16,7 @@
  * @brief The number of tiles to make Sprite9. 
  * 
  */
-#define Sprite9_TILE_COUNT 600
+#define Sprite9_TILE_COUNT 110
 
 /**
  * @brief The number of bytes Sprite9 occupies. 
@@ -28,13 +28,19 @@
  * @brief The number of bytes in the compression stream for Sprite9. 
  * 
  */
-#define Sprite9_COMPRESSION_LEN 1024
+#define Sprite9_COMPRESSION_BYTES 1024
 
 /**
  * @brief The byte stream to decompress Sprite9 to tile data. 
  * 
  */
 extern const unsigned char Sprite9_COMPRESSION[1024];
+
+/**
+ * @brief The size of the tile mapping is for Sprite9. 
+ * 
+ */
+#define Sprite9_TILE_MAPPING_LENGTH 600
 
 /**
  * @brief The array of Tile indices to create Sprite9 from other Tiles after deduping. 

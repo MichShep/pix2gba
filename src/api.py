@@ -2,7 +2,7 @@ import os
 import re
 from pathlib import Path
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtWidgets
 from PIL import Image as PILImage
 
 from .config import discover_build_roots, find_unit
@@ -35,6 +35,8 @@ def _output_conversion_stats(stats: ConversionStats) -> None:
         log.indent()
         for i in range(min(MAX_FAILED_UNITS, len(stats.failed_conversion_names))):
             log.warn(f"{stats.failed_conversion_names[i]}")
+    else:
+        log.summary("No successful conversions found.")
 
 def build_outputs():
     """
@@ -98,13 +100,13 @@ def build_outputs():
             log.ok(f"Validated.")
 
             # If the same cache then ignore
-            if converted_unit.cache and not needs_rebuild(build_path, converted_unit, cache_dict):
+            if converted_unit.cache and not needs_rebuild(converted_unit, cache_dict, default_unit):
                 stats.total_cached += 1
                 log.dedent()
                 continue
 
             # Start Conversion
-            log.summary(f"Converting...")
+            log.info(f"Converting...")
             run_conversion(converted_unit)
             log.ok(f"Converted.")
 
@@ -131,7 +133,7 @@ def build_outputs():
 
 
 
-def clean_outputs():
+def clean_outputs() -> None:
     log.summary(f"Cleaning all units in {ROOT_DIRECTORY}")
     log.indent()
 
@@ -177,7 +179,7 @@ def clean_outputs():
             for path in paths:
                 if path.exists():
                     path.unlink()
-                    log.summary(f"Removed {path.relative_to(ROOT_DIRECTORY)}")
+                    log.info(f"Removed {path.relative_to(ROOT_DIRECTORY)}")
         log.dedent()
 
 
@@ -202,7 +204,9 @@ def view_output(img_name:str):
     img = PILImage.open(Path(found_unit.image_path))
 
     # Visualize!
-    app = QtWidgets.QApplication()
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication([])
     output_window = OutputWindow(output.u32_data, output.gba_palette, found_unit.bpp, img.width, img.height, found_unit.metatile_width, found_unit.metatile_height)
     output_window.render()
     output_window.show()
@@ -210,7 +214,7 @@ def view_output(img_name:str):
 
     log.summary("No longer viewing unit.")
 
-def make_template():
+def make_template() -> None:
     """
     Creates a template TOML in the project directory
     :return: None
@@ -235,7 +239,7 @@ def _output_verification_stats(stats: VerificationStats) -> None:
         for n in stats.failed_unit_names:
             log.warn(f"{n}")
 
-def verify_inputs():
+def verify_inputs() -> None:
     """
     Handler for verifying all units in the TOML files can be converted successfully
     :return:
@@ -295,7 +299,7 @@ def verify_inputs():
     log.dedent()
     _output_verification_stats(stats)
 
-def create_byte_data(img_name:str):
+def create_byte_data(img_name:str) -> None:
     log.info(f"Creating byte data of {img_name} in {ROOT_DIRECTORY}.")
     # Get all reachable toml files
     build_paths = discover_build_roots(ROOT_DIRECTORY)

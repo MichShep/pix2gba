@@ -3,11 +3,13 @@
     "Sprite6": {
         "unit": "0a3db8aaaf1636d6c6a15944bc51af04095f2575348175263247ef276510a32c",
         "image": "a1c0ad54511429a55a8cc034e719e391fb649b3bcb343176064be9bbab3f4168",
-        "version": "0.6.0"
+        "palette": "ab37d8cd4dc5e1fdaaace78b355d0459cd173a66e2ee1cd3b7027c3bc42d4e35",
+        "version": "0.7.0"
     },
     "Sprite8": {
         "unit": "a85d711402ec3f0562ec56926bc9c7cbc5dbd5cc140e35baaa1c54f3ba8120cf",
         "image": "ab9e2a37ba58349d67c2110a2dfd6585889993dd1f92710004ece9537ccbe65e",
-        "version": "0.6.0"
+        "palette": "",
+        "version": "0.7.0"
     }
 }

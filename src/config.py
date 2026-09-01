@@ -4,6 +4,7 @@ import os
 from .units import ConversionUnit
 from pathlib import Path
 from . import cli_log as log
+from typing import Optional
 
 ACCEPTED_OUTPUT_TYPES = [
     "both",
@@ -27,14 +28,6 @@ TOML_ARGUMENTS = [
     "cache"
 ]
 
-def _print_error(message: str) -> None:
-    """
-    Prints the string to the terminal as red (usually for error messages).
-    :param message: The string to be printed.
-    :return: None
-    """
-    log.error(message)
-
 def discover_build_roots(root: Path) -> list[Path]:
     """
     Recursively searches for directories containing a pix2gba.toml file.
@@ -54,7 +47,7 @@ def discover_build_roots(root: Path) -> list[Path]:
 
     return results
 
-def _is_power_of_two(n):
+def _is_power_of_two(n: int):
     """
     Determines whether a number is a power of two.
     :param n: Integer value to check.
@@ -71,54 +64,55 @@ def _is_hex(s):
     try:
         int(s, 16)
         return True
-    except Exception:
+    except ValueError:
         return False
 
-def validate_unit(unit: ConversionUnit, default=False) -> int:
+def validate_unit(unit: ConversionUnit, default: bool=False) -> int:
     """
     Validates a ConversionUnit prior to conversion.
     :param unit: ConversionUnit to validate.
+    :param default: Flag for if the unit is the default unit behavior
     :return: Integer error code (0 indicates success).
     """
     if not os.path.exists(unit.output_dir):
-        _print_error(f"Output directory does not exist:  `{unit.output_dir}`")
+        log.error(f"Output directory does not exist:  `{unit.output_dir}`")
         return 4
     if not os.path.isdir(unit.output_dir):
-        _print_error(f"Output directory is not a directory: `{unit.output_dir}`")
+        log.error(f"Output directory is not a directory: `{unit.output_dir}`")
         return 5
 
     if not _is_power_of_two(unit.bpp):
-        _print_error(f"Bpp is not power of two: {unit.bpp}")
+        log.error(f"Bpp is not power of two: {unit.bpp}")
         return 6
 
     if unit.output_type not in ACCEPTED_OUTPUT_TYPES:
-        _print_error(
+        log.error(
             f"Output type is not accepted (acceptable are `both`, `c`, `h`): `{unit.output_type}`"
         )
         return 7
 
     if unit.transparent != "":
         if not _is_hex(unit.transparent):
-            _print_error(f"Transparent RGB15 color is not hex: `{unit.transparent}`")
+            log.error(f"Transparent RGB15 color is not hex: `{unit.transparent}`")
             return 8
         if int(unit.transparent, 16) > 0x7FFF:
-            _print_error(
+            log.error(
                 f"Transparent RGB15 color is not a valid color (max value is 0x7FFF): `{unit.transparent}`"
             )
             return 9
 
-    img_path = Path(unit.root_dir / unit.name).with_suffix(".png")
+    img_path = unit.image_path
     if not img_path.exists() and not default:
-        _print_error(f"Input image `{img_path}` does not exist")
+        log.error(f"Input image `{img_path}` does not exist")
         return 1
 
     if unit.palette_path != "":
         if not Path(unit.palette_path).exists():
-            _print_error(f"Palette path does not exist: `{unit.palette_path}`")
+            log.error(f"Palette path does not exist: `{unit.palette_path}`")
             return 2
 
     if unit.metatile_height < 1 or unit.metatile_width < 1:
-        _print_error(
+        log.error(
             f"Meta tile height/width must be greater than or equal to 1: "
             f"mh=`{unit.metatile_height}`, mh=`{unit.metatile_width}`"
         )
@@ -143,22 +137,25 @@ def find_unit(build_roots: list[Path], unit_name:str) -> ConversionUnit:
             if element["name"] == unit_name:
                 return convert_unit_dict(element, default_unit)
 
-    _print_error(f"Unit does not exist: `{unit_name}`")
+    log.error(f"Unit does not exist: `{unit_name}`")
     exit(1)
 
-def read_toml(build_root: Path):
+def read_toml(build_root: Path) -> Optional[dict]:
     toml_path = build_root / "pix2gba.toml"
 
     if toml_path.exists():
-        return toml.load(toml_path)
+        try:
+            return toml.load(toml_path)
+        except toml.TomlDecodeError: 
+            log.error(f"Failed to decode toml at {toml_path} file returning blank")
 
     return None
 
-def build_default(root_dir:Path, data: dict) -> ConversionUnit:
+def build_default(root_dir:Path, data: dict) -> Optional[ConversionUnit]:
     # Make sure it has a default key
     if data.get("default", None) is None:
-        _print_error(f"    Default argument field is missing!")
-        _print_error( "    Abandoning.")
+        log.error(f"    Default argument field is missing!")
+        log.error( "    Abandoning.")
         return None
     
     remaining_args = TOML_ARGUMENTS.copy()
@@ -171,18 +168,18 @@ def build_default(root_dir:Path, data: dict) -> ConversionUnit:
     for element in default_data:
         # Check if a registered argument
         if element not in TOML_ARGUMENTS:
-            print(f"    Unknown default argument: {element}... Discarding.")
+            log.warn(f"    Unknown default argument: {element}... Discarding.")
             continue
                     
         # Remove the used arg
         if element not in remaining_args:
-            print(f"    Duplicate of argument: {element}... Ignoring.")
+            log.warn(f"    Duplicate of argument: {element}... Ignoring.")
 
         remaining_args.remove(element)
         
     if len(remaining_args):
-        _print_error(f"    Default arguments missing: {remaining_args}")
-        _print_error( "    Abandoning.")
+        log.error(f"    Default arguments missing: {remaining_args}")
+        log.error( "    Abandoning.")
         return None
 
     default_unit = ConversionUnit(
@@ -208,15 +205,15 @@ def build_default(root_dir:Path, data: dict) -> ConversionUnit:
         return None
 
     if data.get("unit", None) is None:
-        _print_error(f"    There are no fields under the name `unit`!")
-        _print_error("    Abandoning.")
+        log.error(f"    There are no fields under the name `unit`!")
+        log.error("    Abandoning.")
         return None
 
     return default_unit
 
-def convert_unit_dict(data: dict, default: ConversionUnit) -> ConversionUnit:
+def convert_unit_dict(data: dict, default: ConversionUnit) -> Optional[ConversionUnit]:
     if data.get("name") is None:
-        _print_error("    Unit name is missing (can't be defaulted)!")
+        log.error("    Unit name is missing (can't be defaulted)!")
         return None
 
     # Create from default if not provided

@@ -16,7 +16,7 @@
  * @brief The number of tiles to make Sprite5. 
  * 
  */
-#define Sprite5_TILE_COUNT 24
+#define Sprite5_TILE_COUNT 13
 
 /**
  * @brief The number of bytes Sprite5 occupies. 
@@ -29,6 +29,12 @@
  * 
  */
 extern const unsigned int Sprite5_TILES[104];
+
+/**
+ * @brief The size of the tile mapping is for Sprite5. 
+ * 
+ */
+#define Sprite5_TILE_MAPPING_LENGTH 24
 
 /**
  * @brief The array of Tile indices to create Sprite5 from other Tiles after deduping. 

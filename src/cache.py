@@ -4,7 +4,7 @@ import json
 import hashlib
 from . import cli_log as log
 
-VERSION = "0.6.0"
+VERSION = "0.7.0"
 
 from .units import ConversionUnit
 
@@ -35,22 +35,47 @@ def _hash_unit_dict(unit: ConversionUnit):
 
     return hash_dict(unit_dict)
 
-def get_cache_dict(build_path: Path)-> dict:
+
+def _hash_palette(unit: ConversionUnit) -> str:
+    """
+    Returns a content hash of the unit's palette image, or "" if the
+    unit has no palette file to hash (e.g. generate_palette is used instead).
+    """
+    if not unit.palette_path:
+        return ""
+
+    palette_path = Path(unit.palette_path)
+    if not palette_path.exists():
+        return ""
+
+    return hash_image_pixels(palette_path)
+
+
+def get_cache_dict(build_path: Path) -> dict:
     cache_path = build_path / "pix2gba_cache.json"
 
     if not cache_path.exists():
         return {}
 
-    with open(cache_path, "r") as f:
-        return json.load(f)
+    try:
+        with open(cache_path, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        log.warn("Cache file unreadable, treating as empty.")
+        return {}
 
-def needs_rebuild(path: Path, unit: ConversionUnit, cache_dict: dict) -> bool:
+
+def needs_rebuild(unit: ConversionUnit, cache_dict: dict, default_unit: ConversionUnit,) -> bool:
     """
     Returns True if the unit needs rebuilding, False otherwise.
     Assumes cache_dict was already read from pix2gba_cache.json.
     """
 
-    unit_hash = _hash_unit_dict(unit)
+    # If the shared defaults changed since last cache, every unit
+    # in this build directory needs rebuilding.
+    current_default_hash = _hash_unit_dict(default_unit)
+    if cache_dict.get("default", "") != current_default_hash:
+        return True
 
     old_hashes = cache_dict.get(unit.name)
 
@@ -58,12 +83,14 @@ def needs_rebuild(path: Path, unit: ConversionUnit, cache_dict: dict) -> bool:
     if old_hashes is None:
         return True
 
-    # Only compute image hash if needed
-    image_hash = hash_image_pixels(path / f"{unit.name}.png")
+    unit_hash = _hash_unit_dict(unit)
+    image_hash = hash_image_pixels(unit.image_path)
+    palette_hash = _hash_palette(unit)
 
     if (
         old_hashes.get("unit", "") != unit_hash
         or old_hashes.get("image", "") != image_hash
+        or old_hashes.get("palette", "") != palette_hash
         or old_hashes.get("version", "") != VERSION
     ):
         return True
@@ -76,30 +103,27 @@ def create_cache(default_unit: ConversionUnit, passed_units: list[ConversionUnit
     """
     Updates cache files after conversion.
     """
-    cache_file = default_unit.root_dir / "pix2gba_cache.json"
-
-    # Load existing cache so valid units are preserved
-    if cache_file.exists():
-        with open(cache_file, "r") as file:
-            cache_dict = json.load(file)
-    else:
-        cache_dict = {}
-
     if len(passed_units) == 0:
         return
 
-    # Create default hash
-    default_hash = _hash_unit_dict(default_unit)
+    cache_file = default_unit.root_dir / "pix2gba_cache.json"
 
-    cache_dict["default"] = default_hash
+    # Load existing cache so valid units are preserved
+    cache_dict = get_cache_dict(default_unit.root_dir)
+
+    # Store default hash once, at the top level — every unit is
+    # checked against this same value, not a per-unit copy.
+    cache_dict["default"] = _hash_unit_dict(default_unit)
 
     for unit in passed_units:
         unit_hash = _hash_unit_dict(unit)
         image_hash = hash_image_pixels(unit.image_path)
+        palette_hash = _hash_palette(unit)
 
         cache_dict[unit.name] = {
             "unit": unit_hash,
             "image": image_hash,
+            "palette": palette_hash,
             "version": VERSION,
         }
 

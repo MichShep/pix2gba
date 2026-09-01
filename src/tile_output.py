@@ -11,10 +11,11 @@ OUTPUT_VAR_NAMES = {
     "tiles": "_TILES",
     "tile count": "_TILE_COUNT",
     "tile bytes": "_TILE_BYTES",
+    "dedupe length": "_TILE_MAPPING_LENGTH",
     "dedupe mapping": "_TILE_MAPPING",
     "palette length": "_PAL_LEN",
     "compression" : "_COMPRESSION",
-    "compression length" : "_COMPRESSION_LEN",
+    "compression bytes" : "_COMPRESSION_BYTES",
     "palette": "_PAL"
 }
 
@@ -108,7 +109,10 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
                  " * @brief The number of tiles to make " + file_name + ". \n" +
                  " * \n" +
                  " */\n")
-    file_str += "#define " + file_name + OUTPUT_VAR_NAMES["tile count"] + " " + str( num_tiles) + "\n\n"
+    if unit_data.dedupe:
+        file_str += "#define " + file_name + OUTPUT_VAR_NAMES["tile count"] + " " + str(output_data.unique_tiles) + "\n\n"
+    else:
+        file_str += "#define " + file_name + OUTPUT_VAR_NAMES["tile count"] + " " + str( num_tiles) + "\n\n"
 
     # Tile data length macro
     file_str += ("/**\n" +
@@ -124,7 +128,7 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
                      " * @brief The number of bytes in the compression stream for " + file_name + ". \n" +
                      " * \n" +
                      " */\n")
-        file_str += "#define " + file_name + OUTPUT_VAR_NAMES["compression length"] + " " + str(num_bytes) + "\n\n"
+        file_str += "#define " + file_name + OUTPUT_VAR_NAMES["compression bytes"] + " " + str(num_bytes) + "\n\n"
 
         file_str += ("/**\n" +
                      " * @brief The byte stream to decompress " + file_name + " to tile data. \n" +
@@ -142,8 +146,14 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
         file_str += "extern const unsigned int " + file_name + OUTPUT_VAR_NAMES["tiles"] + "[" + str(num_u32) + "];\n"
 
     if unit_data.dedupe:
-        # External tile mapping data declaration
         file_str += ("\n/**\n" +
+                     " * @brief The size of the tile mapping is for " + file_name + ". \n" +
+                     " * \n" +
+                     " */\n")
+        file_str += "#define " + file_name + OUTPUT_VAR_NAMES["dedupe length"] + " " + str(num_tiles) + "\n\n"
+
+        # External tile mapping data declaration
+        file_str += ("/**\n" +
                      " * @brief The array of Tile indices to create " +
                      file_name + " from other Tiles after deduping. \n" +
                      " * \n" +

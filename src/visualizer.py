@@ -1,9 +1,7 @@
-import os
-from pathlib import Path
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtGui, QtWidgets
 from PySide6.QtCore import Qt
 
-from .gba_utils import rgb15_to_rgb888, rgb888_to_hex
+from .gba_utils import rgb15_to_rgb888
 
 
 class OutputWindow(QtWidgets.QMainWindow):

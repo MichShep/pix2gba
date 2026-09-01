@@ -163,8 +163,6 @@ ptrdiff_t GBA_LZ77Compress(const uint8_t* in, size_t inputLength,
         }
     }
 
-    // Your original pads BYTES WRITTEN (payload) to 4 before writing.
-    // Here bytesWritten includes the header too; to keep identical payload padding behavior,
     // pad so that TOTAL LENGTH is 4-aligned as well.
     while ((bytesWritten % 4) != 0) {
         if (!put_u8(out, out_cap, bytesWritten, 0x00)) {

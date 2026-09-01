@@ -1,4 +1,5 @@
 import os.path
+from typing import Optional
 
 from PIL import Image as PILImage
 from .gba_utils import rgb24_to_rgb15, unpack_gba_color
@@ -25,7 +26,7 @@ def float_transparent_color(gba_palette:list, transparent:int) -> list:
 
     return gba_palette
 
-def extract_palette_img(filename:str, bpp:int, transparent:int) -> list:
+def extract_palette_img(filename:str, bpp:int, transparent:int) -> Optional[list]:
     """
     Extract a GBA palette directly from an image where each pixel represents
     a palette entry.
@@ -106,7 +107,7 @@ def closest_gba_color(color:int, gba_palette:list) -> int:
     return int(np.argmin(distances))
 
 
-def create_conversion_table(input_img, gba_palette):
+def create_conversion_table(input_img : str, gba_palette) -> dict:
     """
     Create a lookup table mapping image colors to palette indices based
     on closest GBA color matching.

@@ -28,7 +28,7 @@
  * @brief The number of bytes in the compression stream for Sprite8. 
  * 
  */
-#define Sprite8_COMPRESSION_LEN 344
+#define Sprite8_COMPRESSION_BYTES 344
 
 /**
  * @brief The byte stream to decompress Sprite8 to tile data. 

@@ -377,12 +377,6 @@ A unit rebuilds when any of its hashes change. `pix2gba clean` deletes the cache
 ## FAQ
 
 <details>
-<summary><strong>I get <code>Output directory does not exist</code>, but the folder is right next to my TOML.</strong></summary>
-
-`destination` and `palette` paths resolve against the directory you **run pix2gba from**, not the TOML's folder. Only the image (`name`) is looked up next to the TOML. Write these paths relative to your project root and always run pix2gba from there. pix2gba also doesn't create output folders, so create `destination` first.
-</details>
-
-<details>
 <summary><strong>What happens if my image isn't a multiple of the metatile size?</strong></summary>
 
 pix2gba pads the right and bottom edges out to whole metatiles (`metatile_width × 8` by `metatile_height × 8` pixels) and fills the padding with palette index 0, the transparent color. For example, a 21×13 image with 2×2 metatiles becomes 32×16. The header shows the padded size, e.g. `21pxl by 13pxl @ 4bpp (padded to 32pxl by 16pxl)`, and `NAME_TILE_COUNT` includes the padding tiles.

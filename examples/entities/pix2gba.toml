@@ -15,16 +15,21 @@ cache = 1
 
 [[unit]]
 name = "Sprite6"
-palette = "./Sprite6_palette.png"
+palette = "./Palette1.png"
+generate_palette = 0
+
+[[unit]]
+name = "Sprite4"
+palette = "./Palette2.png"
 generate_palette = 0
 
 [[unit]]
 name = "Sprite7"
 palette = "./faulty_path"
-generate_palette = 1
 compress = 1
 
 [[unit]]
 name = "Sprite8"
 palette_include = 1
+generate_palette = 1
 compress = 1

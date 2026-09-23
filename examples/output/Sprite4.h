@@ -1,8 +1,8 @@
-// Sprite6; on palette Palette1.png
+// Sprite4; on palette Palette2.png
 #pragma once
 
 //======================================================================
-//	Sprite6, 64pxl by 32pxl @ 4bpp
+//	Sprite4, 64pxl by 32pxl @ 4bpp
 //	+ Number of Tiles : 32
 //	+ Metatile Shape  : 4w by 4h
 //	+ Dimensions in MT: 2w by 1h
@@ -12,19 +12,19 @@
 //======================================================================
 
 /**
- * @brief The number of tiles to make Sprite6. 
+ * @brief The number of tiles to make Sprite4. 
  * 
  */
-#define Sprite6_TILE_COUNT 32
+#define Sprite4_TILE_COUNT 32
 
 /**
- * @brief The number of bytes Sprite6 occupies. 
+ * @brief The number of bytes Sprite4 occupies. 
  * 
  */
-#define Sprite6_TILE_BYTES 1024
+#define Sprite4_TILE_BYTES 1024
 
 /**
- * @brief The array of Palette indices (4 packed into one uint) to create Sprite6 in Tiles. 
+ * @brief The array of Palette indices (4 packed into one uint) to create Sprite4 in Tiles. 
  * 
  */
-extern const unsigned int Sprite6_TILES[256];
+extern const unsigned int Sprite4_TILES[256];

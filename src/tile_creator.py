@@ -4,6 +4,7 @@ from typing import Union
 
 from .gba_utils import rgb24_to_rgb15
 from .units import ConversionUnit
+from . import cli_log as log
 
 def padded_dimensions(width: int, height: int, meta_w: int, meta_h: int) -> tuple[int, int]:
     """
@@ -127,6 +128,6 @@ def create_tile_data(unit: ConversionUnit, conversion_table: dict[int, int], hex
 
     except IndexError:
         # Catch out-of-bounds access caused by misaligned traversal
-        print("ERROR: Out of bounds for", x_offset, y_offset, "on dimensions", width, height)
+        log.error(f"Out of bounds for {x_offset} {y_offset} on dimensions {width} {height}")
 
     return tile_data_1d

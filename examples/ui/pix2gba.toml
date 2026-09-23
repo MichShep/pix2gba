@@ -27,4 +27,4 @@ metatile_height = 1
 palette_include = 1
 dedupe = 1
 compress = 1
-cache = 0
+cache = 0 #avoids being caches

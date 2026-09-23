@@ -123,11 +123,12 @@ def build_outputs() -> None:
         # Update Cache
         log.dedent()
 
-        log.summary("Updating Cache...")
+        log.info("Updating Cache...")
         create_cache(default_unit, local_success)
         log.ok("Cache Updated.")
 
-        log.ok("Build Directory Finished\n", str(build_path.relative_to(ROOT_DIRECTORY)))
+        log.ok("Build Directory Finished", str(build_path.relative_to(ROOT_DIRECTORY)))
+        log.blank()
 
     log.dedent()
 
@@ -142,15 +143,16 @@ def clean_outputs() -> None:
     Handler for removing every cache file and generated output file
     :return: None
     """
-    log.summary(f"Cleaning all units in {ROOT_DIRECTORY}")
+    log.info(f"Cleaning all units in {ROOT_DIRECTORY}")
     log.indent()
+    removed_count = 0
 
     # Find all toml files
     build_paths = discover_build_roots(ROOT_DIRECTORY)
 
     # Remove all cache files
     for path in build_paths:
-        log.summary(f"Cleaning {path.relative_to(ROOT_DIRECTORY)}")
+        log.info(f"Cleaning {path.relative_to(ROOT_DIRECTORY)}")
         log.indent()
         cache_path = path / "pix2gba_cache.json"
 
@@ -158,7 +160,8 @@ def clean_outputs() -> None:
 
         if cache_path.exists():
             os.remove(cache_path)
-            log.summary(f"Removed {cache_path.relative_to(ROOT_DIRECTORY)}")
+            removed_count += 1
+            log.info(f"Removed {cache_path.relative_to(ROOT_DIRECTORY)}")
 
         if toml_data is None or toml_data.get("unit", None) is None:
             log.dedent()
@@ -191,8 +194,12 @@ def clean_outputs() -> None:
             for out_path in paths:
                 if out_path.exists():
                     out_path.unlink()
+                    removed_count += 1
                     log.info(f"Removed {out_path.relative_to(ROOT_DIRECTORY)}")
         log.dedent()
+
+    log.dedent()
+    log.summary(f"Cleaned {len(build_paths)} build director{'y' if len(build_paths) == 1 else 'ies'}, removed {removed_count} file(s).")
 
 
 def view_output(img_name: str) -> None:
@@ -248,8 +255,8 @@ def _output_verification_stats(stats: VerificationStats) -> None:
     log.summary("Final Statistics.")
     log.indent()
     if stats.total_units != 0:
-        log.summary(f" \tVerified Units: {stats.successful_units}")
-        log.summary(f" \tFailed Units: {len(stats.failed_unit_names)}")
+        log.summary(f"Verified Units: {stats.successful_units}")
+        log.summary(f"Failed Units: {len(stats.failed_unit_names)}")
         log.indent()
         for n in stats.failed_unit_names:
             log.warn(f"{n}")
@@ -290,24 +297,24 @@ def verify_inputs() -> None:
 
         # Go through each unit path
         for unit_data in toml_data["unit"]:
-            log.indent()
             stats.total_units += 1
             name = unit_data["name"]
 
             # Ignore the cache for verifying
             log.info("Verifying unit...", name)
+            log.indent()
             converted_unit = convert_unit_dict(unit_data, default_unit)
 
             if converted_unit is None:
                 stats.failed_unit_names.append(name)
                 log.dedent()
-                print()
+                log.blank()
                 continue
 
             log.ok("Verified.")
             stats.successful_units += 1
 
-            print()
+            log.blank()
             log.dedent()
         log.dedent()
 
@@ -345,4 +352,4 @@ def create_byte_data(img_name: str) -> None:
             v = int(w, 16)
             f.write(v.to_bytes(4, "little"))
 
-    log.ok("Done.")
+    log.summary(f"Wrote {img_name}_bytes.bin")

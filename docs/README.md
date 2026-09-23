@@ -189,6 +189,8 @@ Run every command from your **project root**. pix2gba searches downward from the
 | `pix2gba template` | Write a starter config to `pix2gba_template.toml` in the current directory. Rename it to `pix2gba.toml` and move it next to your images. |
 | `pix2gba help` | Show command help. |
 
+By default pix2gba prints only warnings, errors, and the final summary. Add `--verbose` to any command (`pix2gba make --verbose`) to see every step, including validation, cache hits, and dedupe/compression results.
+
 <!-- TODO: add GIF: docs/media/view-demo.gif
      Suggested content (<20s, silent): run `pix2gba view Sprite6`, the preview window opens with the
      8x-scaled sprite; close it, change `bpp` or the palette in the TOML, run view again, and show the

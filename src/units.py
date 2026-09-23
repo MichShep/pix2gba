@@ -5,8 +5,8 @@ from pathlib import Path
 class ConversionUnit:
     """
     One image to convert, with all TOML settings resolved against the default unit.
-    Paths from the TOML (destination, palette) are kept as the strings the user wrote,
-    and flags are the 0/1 integers from the TOML.
+    Paths from the TOML (destination, palette) are resolved against root_dir, the directory
+    holding the pix2gba.toml ("" stays "" to mean no path), and flags are the 0/1 integers from the TOML.
     """
     name: str
 

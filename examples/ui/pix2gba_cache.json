@@ -1,15 +1,15 @@
 {
-    "default": "3fe7da1c4632e1284ad41d748188888d4ec92b799b1ac8551671619115567c7e",
+    "default": "586c54ebe015eaf9b50ec5946f545c70c5ac45c5102a4ed2011fbfcf9299a29b",
     "Sprite5": {
-        "unit": "26a7d54bf6d2f5ba1ac73256d5a8f84e0360da84de0a5d2bbd999dec4d2e330e",
+        "unit": "53672cbc415a79be234395a13990881751d4ab6303bd503f43721bc6915f907b",
         "image": "ba0046adf2840796de5e2129515c5046a145895c6a2196af9311eb47bd9907c0",
         "palette": "",
-        "version": "0.8.0"
+        "version": "0.8.1"
     },
     "Sprite9": {
-        "unit": "6761866ebee52ad8f48e5c2c1daf43c4423b5742d049afa95227835a7f5aeaa3",
+        "unit": "b30355afe1fdb4be0d590c503231e83e1e24e2cd8ea1e224dc8185f2f7e4ac5e",
         "image": "5aeac79182c23fbd8755b4d8e8479e6df69cf0430c3c90e59418bb6a1232a198",
         "palette": "",
-        "version": "0.8.0"
+        "version": "0.8.1"
     }
 }

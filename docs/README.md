@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.8.0-4a5ab8">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.8.1-4a5ab8">
   <img alt="Python" src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white">
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey">
   <img alt="Target" src="https://img.shields.io/badge/target-Game%20Boy%20Advance-6a5acd">
@@ -223,7 +223,7 @@ Each file has **one `[default]` block that must list every key**, plus one `[[un
 bpp = 4
 transparent = "0x5D53"      # RGB15; always placed at palette index 0
 output_type = "both"
-destination = "./gfx"       # relative to where you run pix2gba
+destination = "../gfx"      # relative to this pix2gba.toml
 name = ""
 metatile_width = 1
 metatile_height = 1
@@ -243,7 +243,7 @@ compress = 1
 
 [[unit]]
 name = "enemy"
-palette = "./sprites/shared_palette.png"
+palette = "./shared_palette.png"
 dedupe = 1
 ```
 
@@ -255,7 +255,7 @@ dedupe = 1
 | `bpp` | int | Bits per pixel: `4` (16 colors) or `8` (256 colors). |
 | `transparent` | str | RGB15 hex color placed at palette index 0, e.g. `"0x5D53"`. Max `0x7FFF`. |
 | `output_type` | str | `"c"`, `"h"`, or `"both"`. |
-| `destination` | path | Output directory. It must already exist, and relative paths resolve against the directory you run pix2gba from. |
+| `destination` | path | Output directory. It must already exist, and relative paths resolve against the directory containing the pix2gba.toml. |
 | `metatile_width` | int | Width of a metatile in 8×8 tiles (≥ 1). |
 | `metatile_height` | int | Height of a metatile in 8×8 tiles (≥ 1). |
 | `palette` | path | Palette image (one pixel = one color, at most 2^bpp pixels), or `""` to generate the palette from the image. |

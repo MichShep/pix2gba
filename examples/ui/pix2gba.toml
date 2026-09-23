@@ -2,7 +2,7 @@
 bpp = 4
 transparent = "0x5D53"
 output_type = "both"
-destination = "./examples/output"
+destination = "../output"
 name = ""
 metatile_width = 1
 metatile_height = 1

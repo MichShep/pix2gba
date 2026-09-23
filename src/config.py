@@ -49,6 +49,17 @@ def discover_build_roots(root: Path) -> list[Path]:
 
     return results
 
+def _resolve_toml_path(root_dir: Path, value: str) -> str:
+    """
+    Resolves a path written in a pix2gba.toml against the directory holding that file.
+    :param root_dir: Directory containing the pix2gba.toml file.
+    :param value: Path as written in the TOML ("" means no path).
+    :return: The resolved path, or "" if value is "".
+    """
+    if value == "":
+        return ""
+    return str(root_dir / value)
+
 def _is_power_of_two(n: int) -> bool:
     """
     Determines whether a number is a power of two.
@@ -201,10 +212,10 @@ def build_default(root_dir: Path, data: dict) -> Optional[ConversionUnit]:
         bpp=default_data["bpp"],
         transparent=default_data["transparent"],
         output_type=default_data["output_type"],
-        output_dir=default_data["destination"],
+        output_dir=_resolve_toml_path(root_dir, default_data["destination"]),
         metatile_width=default_data["metatile_width"],
         metatile_height=default_data["metatile_height"],
-        palette_path=default_data["palette"],
+        palette_path=_resolve_toml_path(root_dir, default_data["palette"]),
         palette_include=default_data["palette_include"],
         generate_palette=default_data["generate_palette"],
         compress=default_data["compress"],
@@ -236,16 +247,24 @@ def convert_unit_dict(data: dict, default: ConversionUnit) -> Optional[Conversio
         log.error("    Unit name is missing (can't be defaulted)!")
         return None
 
+    # Paths set on the unit resolve against the TOML directory; defaulted paths are already resolved
+    output_dir = default.output_dir
+    if "destination" in data:
+        output_dir = _resolve_toml_path(default.root_dir, data["destination"])
+    palette_path = default.palette_path
+    if "palette" in data:
+        palette_path = _resolve_toml_path(default.root_dir, data["palette"])
+
     # Create from default if not provided
     new_unit = ConversionUnit(
         name=data.get("name"),
         bpp=data.get("bpp", default.bpp),
         transparent=data.get("transparent", default.transparent),
         output_type=data.get("output_type", default.output_type),
-        output_dir=data.get("destination", default.output_dir),
+        output_dir=output_dir,
         metatile_width=data.get("metatile_width", default.metatile_width),
         metatile_height=data.get("metatile_height", default.metatile_height),
-        palette_path=data.get("palette", default.palette_path),
+        palette_path=palette_path,
         palette_include=data.get("palette_include", default.palette_include),
         generate_palette=data.get("generate_palette", default.generate_palette),
         compress=data.get("compress", default.compress),

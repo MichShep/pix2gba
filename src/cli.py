@@ -1,13 +1,14 @@
 import argparse
 from . import cli_log as log
 from .api import build_outputs, clean_outputs, make_template, view_output, verify_inputs, create_byte_data
+from .cache import VERSION
 
 def print_help() -> None:
     """
     Prints the pix2gba command help.
     """
-    print("""
-pix2gba - Convert images into GBA tile data
+    print(f"""
+pix2gba v{VERSION} - Convert images into GBA tile data
 
 Usage:
     pix2gba <command> [arguments]
@@ -20,6 +21,10 @@ Commands:
     view <unit name>    Preview how a unit will appear on the GBA
     byte <unit name>    Output raw byte data for a unit
     help                Show this help message
+
+Options:
+    -h, --help          Show this help message
+    -v, --version       Show the pix2gba version
 
 Examples:
     pix2gba make
@@ -35,8 +40,9 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(
         prog="pix2gba",
-        description="Convert an Image (PNG, JPEG) to GBA-compatible tile data."
+        description=f"pix2gba v{VERSION} - Convert an Image (PNG, JPEG) to GBA-compatible tile data."
     )
+    parser.add_argument("-v", "--version", action="version", version=f"pix2gba {VERSION}")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("make", help="Build all units found in the project")
@@ -50,6 +56,8 @@ def main() -> None:
     byte_parser = subparsers.add_parser("byte", help="Output raw byte data for a unit")
     byte_parser.add_argument("unit_name", type=str, help="Name of the unit to get byte data for")
 
+    subparsers.add_parser("help", help="Show this help message")
+
     args = parser.parse_args()
 
     dispatch = {
@@ -59,6 +67,7 @@ def main() -> None:
         "verify": lambda: verify_inputs(),
         "view": lambda: view_output(args.unit_name),
         "byte": lambda: create_byte_data(args.unit_name),
+        "help": lambda: print_help(),
     }
 
     dispatch[args.command]()

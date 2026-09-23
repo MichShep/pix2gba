@@ -1,12 +1,32 @@
+import os
 from pathlib import Path
 from typing import Union
 from PIL import Image
 import json
 import hashlib
+import re
+from importlib import metadata
 from . import cli_log as log
 from .units import ConversionUnit
 
-VERSION = "0.8.0"
+def _read_version() -> str:
+    """
+    Reads the package version from pyproject.toml, falling back to installed package metadata.
+    :return: Version string, or "unknown" if it cannot be found.
+    """
+    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    if pyproject.is_file():
+        match = re.search(r'^version\s*=\s*"([^"]+)"', pyproject.read_text(), re.MULTILINE)
+        if match:
+            return match.group(1)
+
+    try:
+        return metadata.version("pix2gba")
+    except metadata.PackageNotFoundError:
+        return "unknown"
+
+
+VERSION = _read_version()
 
 
 def hash_dict(data: dict) -> str:
@@ -32,6 +52,16 @@ def hash_image_pixels(path: Union[str, Path]) -> str:
     return h.hexdigest()
 
 
+def _relative_to_root(unit: ConversionUnit, path: str) -> str:
+    """
+    Returns a unit path relative to its TOML directory, so the cache hash doesn't change
+    when the project is moved or checked out somewhere else.
+    """
+    if path == "":
+        return ""
+    return os.path.relpath(path, unit.root_dir)
+
+
 def _hash_unit_dict(unit: ConversionUnit) -> str:
     """
     Returns a hash of the unit settings that affect the conversion output.
@@ -42,10 +72,10 @@ def _hash_unit_dict(unit: ConversionUnit) -> str:
         "bpp": unit.bpp,
         "transparent": unit.transparent,
         "output_type": unit.output_type,
-        "destination": str(unit.output_dir),
+        "destination": _relative_to_root(unit, unit.output_dir),
         "metatile_width": unit.metatile_width,
         "metatile_height": unit.metatile_height,
-        "palette": unit.palette_path,
+        "palette": _relative_to_root(unit, unit.palette_path),
         "palette_include": unit.palette_include,
         "generate_palette": unit.generate_palette,
         "compress": unit.compress,

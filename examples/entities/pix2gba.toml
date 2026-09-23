@@ -2,7 +2,7 @@
 bpp = 4
 transparent = "0x5D53"
 output_type = "both"
-destination = "./examples/output"
+destination = "../output"
 name = ""
 metatile_width = 4
 metatile_height = 4
@@ -15,7 +15,7 @@ cache = 1
 
 [[unit]]
 name = "Sprite6"
-palette = "./examples/entities/Sprite6_palette.png"
+palette = "./Sprite6_palette.png"
 generate_palette = 0
 
 [[unit]]

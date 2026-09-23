@@ -1,4 +1,4 @@
-# <img alt="logo.png" height="48" src="examples/logo.png" width="48"/> pix2gba 
+# <img alt="logo.png" height="48" src="logo.png" width="48"/> pix2gba 
 
 A Python-based tool for converting standard image formats (PNG, JPEG) into GBA-compatible tile data, palettes, headers, and compression for use in GBA homebrew development.
 
@@ -176,7 +176,7 @@ dedupe = 1
   - Tiles are stored in a 1d stream (see figure below)
 - `.png` preview of the palette (if enabled)
 
-![example_stream.png](examples/example_stream.png)
+![example_stream.png](example_stream.png)
 
 All output respects alignment and visibility attributes needed for GBA toolchains.
 

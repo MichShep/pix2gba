@@ -1,4 +1,4 @@
-// Sprite6; on palette Palette1.png
+// Sprite6; on palette Palette2.png
 #pragma once
 
 //======================================================================

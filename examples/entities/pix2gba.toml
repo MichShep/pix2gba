@@ -15,7 +15,7 @@ cache = 1
 
 [[unit]]
 name = "Sprite6"
-palette = "./Palette1.png"
+palette = "./Palette2.png"
 generate_palette = 0
 
 [[unit]]

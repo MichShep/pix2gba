@@ -22,12 +22,8 @@
 
 **Why it exists:** GBA art has to be sliced into 8×8 tiles, reduced to a 16- or 256-color palette, and bit-packed. Doing that by hand for every image doesn't scale, and one-off converter flags are easy to lose track of. pix2gba keeps the conversion rules **declarative and version-controlled** next to your art. It **caches** results so unchanged assets are skipped, which makes it safe to run as a Makefile prerequisite on every build.
 
-<!-- TODO: add GIF: docs/media/make-demo.gif
-     Suggested content (<20s, silent): run `pix2gba make` on the examples folder, showing the
-     per-unit log (Validated → Deduping → Compression → Converted), then run it again to show every
-     unit skipped as a cache hit. -->
 <p align="center">
-  <img src="media/make-demo.gif" alt="Running pix2gba make twice: the first run converts every unit, the second run skips them as cache hits" width="720"/>
+  <img src="media/MakeDemo.gif" alt="Running pix2gba make twice: the first run converts every unit, the second run skips them as cache hits" width="720"/>
 </p>
 
 ## Table of Contents
@@ -191,14 +187,6 @@ Run every command from your **project root**. pix2gba searches downward from the
 
 By default pix2gba prints only warnings, errors, and the final summary. Add `--verbose` to any command (`pix2gba make --verbose`) to see every step, including validation, cache hits, and dedupe/compression results.
 
-<!-- TODO: add GIF: docs/media/view-demo.gif
-     Suggested content (<20s, silent): run `pix2gba view Sprite6`, the preview window opens with the
-     8x-scaled sprite; close it, change `bpp` or the palette in the TOML, run view again, and show the
-     colors change. -->
-<p align="center">
-  <img src="media/view-demo.gif" alt="pix2gba view opening a scaled-up preview of a converted sprite, then showing the result of a palette change" width="720"/>
-</p>
-
 ### Configuring units (`pix2gba.toml`)
 
 Put a `pix2gba.toml` in each folder of images. A typical layout:
@@ -266,6 +254,13 @@ dedupe = 1
 | `compress` | 0/1 | LZ77-compress the tile data (emits `NAME_COMPRESSION` instead of `NAME_TILES`). |
 | `dedupe` | 0/1 | Remove duplicate tiles and emit `NAME_TILE_MAPPING`. |
 | `cache` | 0/1 | Skip the unit when nothing has changed. With `0`, the unit is rebuilt on every `make`. |
+
+See how easy it is so make changes to assets and view the changes!
+<p align="center">
+  <img src="media/PaletteSwap.gif" alt="pix2gba view opening a scaled-up preview of a converted sprite, then showing the result of a palette change" width="720"/>
+</p>
+
+
 
 ### Using the output in your game
 

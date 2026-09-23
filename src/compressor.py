@@ -1,68 +1,82 @@
-import ctypes
-import platform
 import struct
-from pathlib import Path
+from typing import Union
 
-def _find_lib() -> Path:
+# GBA BIOS LZ77 limits
+LZ77_MIN_MATCH = 3
+LZ77_MAX_MATCH = 18
+LZ77_WINDOW = 0x1000
+# Minimum distance back to a match (LZ77UnCompVram needs at least 2 because VRAM is written 16 bits at a time)
+LZ77_MIN_DISTANCE = 8
+
+
+def _find_match(data: bytes, offset: int, length: int) -> int:
     """
-    Locates the compiled lz77 shared library relative to this file's
-    own location (not the process's cwd), and picks the right
-    extension for the current platform.
+    Finds the nearest earlier copy of data[offset:offset + length] inside the LZ77 window.
+    The copy may overlap the current position, which the BIOS decoder supports.
+    :param data: Uncompressed byte stream
+    :param offset: Position of the bytes to match
+    :param length: Number of bytes that must match
+    :return: Start index of the match, or -1 if there is none
     """
-    lib_dir = Path(__file__).resolve().parent / "bin"
-    system = platform.system()
+    if offset < LZ77_MIN_DISTANCE or offset + length > len(data):
+        return -1
 
-    if system == "Linux":
-        name = "lz77.so"
-    elif system == "Darwin":
-        name = "lz77.so"
-    elif system == "Windows":
-        name = "lz77.dll"
-    else:
-        raise RuntimeError(f"Unsupported platform for lz77 compression: {system}")
-
-    lib_path = lib_dir / name
-    if not lib_path.exists():
-        raise FileNotFoundError( f"Could not find compression library at {lib_path}. ""Was pix2gba installed correctly?")
-    return lib_path
-
-
-lib = ctypes.CDLL(str(_find_lib()))
-
-lib.GBA_LZ77CompressBound.argtypes = [ctypes.c_size_t]
-lib.GBA_LZ77CompressBound.restype = ctypes.c_size_t
-
-lib.GBA_LZ77Compress.argtypes = [
-    ctypes.POINTER(ctypes.c_ubyte), ctypes.c_size_t,
-    ctypes.POINTER(ctypes.c_ubyte), ctypes.c_size_t
-]
-lib.GBA_LZ77Compress.restype = ctypes.c_ssize_t
+    window_start = max(0, offset - LZ77_WINDOW)
+    window_end = offset - LZ77_MIN_DISTANCE + length
+    return data.rfind(data[offset:offset + length], window_start, window_end)
 
 
 def gba_lz77_compress(data: bytes) -> bytes:
     """
-    The compression function that invokes a compiled binary to compress the data
+    Compresses a byte stream into the GBA BIOS LZ77 format (LZ77UnCompVram / LZ77UnCompWram).
     :param data: Uncompressed byte stream of the unit
-    :return: Compressed byte stream of the unit
+    :return: Compressed byte stream of the unit, padded to a multiple of 4 bytes
     """
-    # Normalize to an immutable bytes object for from_buffer_copy
     data = bytes(data)
+    data_len = len(data)
 
-    in_len = len(data)
-    in_buf = (ctypes.c_ubyte * in_len).from_buffer_copy(data)
+    # Header: compression type 0x10 with the uncompressed size in the upper 24 bits
+    out = bytearray(struct.pack("<I", (data_len << 8) | 0x10))
 
-    # Use the *bound* function (not the compressor) to size the output buffer
-    out_cap = lib.GBA_LZ77CompressBound(in_len)
-    out_py = bytearray(out_cap)
-    out_buf = (ctypes.c_ubyte * out_cap).from_buffer(out_py)
+    offset = 0
+    while offset < data_len:
+        # Each block is a flag byte followed by up to 8 literals/tokens (MSB first, 1 = token)
+        flag_position = len(out)
+        out.append(0)
+        flags = 0
 
-    n = lib.GBA_LZ77Compress(in_buf, in_len, out_buf, out_cap)
-    if n < 0:
-        raise RuntimeError(f"GBA_LZ77Compress failed: {n}")
-    return bytes(out_py[:n])
+        for bit in range(8):
+            if offset >= data_len:
+                break
+
+            # Take the longest match; each length uses its nearest occurrence
+            token_size = 0
+            token_start = -1
+            for length in range(LZ77_MIN_MATCH, LZ77_MAX_MATCH + 1):
+                start = _find_match(data, offset, length)
+                if start < 0:
+                    break
+                token_size = length
+                token_start = start
+
+            if token_size:
+                distance = offset - token_start - 1
+                out.append(((token_size - LZ77_MIN_MATCH) << 4) | (distance >> 8))
+                out.append(distance & 0xFF)
+                flags |= 0x80 >> bit
+                offset += token_size
+            else:
+                out.append(data[offset])
+                offset += 1
+
+        out[flag_position] = flags
+
+    # Pad so the total length is 4-byte aligned
+    out += bytes(-len(out) % 4)
+    return bytes(out)
 
 
-def gba_lz77_compress_list(data: list) -> bytes:
+def gba_lz77_compress_list(data: list[Union[str, int]]) -> bytes:
     """
     Compresses a list of u32 values (either hex strings like "0x1234ABCD"
     or plain ints/numpy ints) using GBA LZ77 compression.

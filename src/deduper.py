@@ -1,11 +1,14 @@
-def _hash_list(l: list):
+def _hash_list(l: list[int]) -> int:
+    """
+    Computes a simple polynomial hash of a list of ints.
+    """
     result = 17
     for i in range(len(l)):
         result = result * 31 + l[i]
     return result
 
 
-def _compare_lists(l1: list, l2: list) -> bool:
+def _compare_lists(l1: list[int], l2: list[int]) -> bool:
     """
     Checks if two lists contain identical values
     """
@@ -19,7 +22,14 @@ def _compare_lists(l1: list, l2: list) -> bool:
     return True
 
 
-def dedupe_tiles(hex_list: list, bpp: int) -> dict:
+def dedupe_tiles(hex_list: list[str], bpp: int) -> dict:
+    """
+    Removes duplicate tiles from a packed tile stream.
+    :param hex_list: Packed tile data as u32 hex strings.
+    :param bpp: Bits per pixel (4 or 8).
+    :return: Dict with "final_list" (unique tiles as hex strings), "tile_mapping"
+        (unique tile index for every original tile) and "unique_tile_count".
+    """
 
     # 1. Convert hex strings to ints
     int_list = [int(h, 16) for h in hex_list]

@@ -1,6 +1,5 @@
-import os
+from typing import Optional
 # Helpers
-import struct
 from .units import ConversionUnit, UnitOutput
 from .palette import extract_palette_img, palette_from_img, create_conversion_table
 # Actual Converters
@@ -11,9 +10,14 @@ from .compressor import gba_lz77_compress_list
 from .tile_output import make_output
 from . import cli_log as log
 
-def run_conversion(unit: ConversionUnit, simulate=False) -> UnitOutput:
+def run_conversion(unit: ConversionUnit, simulate: bool = False) -> Optional[UnitOutput]:
+    """
+    Converts a unit into GBA tile data.
+    :param unit: Unit to convert.
+    :param simulate: If True, skip deduping, compression and file output.
+    :return: The conversion output, or None if the conversion failed.
+    """
     # Step 1: Create GBA palette
-    #print("* Extracting Palette...")
     if unit.palette_path != "":
         gba_palette = extract_palette_img(
             filename=str(unit.palette_path),
@@ -30,14 +34,12 @@ def run_conversion(unit: ConversionUnit, simulate=False) -> UnitOutput:
         )
 
     # Step 2: Create conversion table
-    #print("* Creating Color Conversion Table...")
     conversion_table = create_conversion_table(
         input_img=str(unit.image_path),
         gba_palette=gba_palette,
     )
 
     # Step 3: Create the base tile with no extras
-    #print("* Generating C/Header Output...")
     u32_data = create_tile_data(unit, conversion_table)
 
     tile_size_bytes = 32 if unit.bpp == 4 else 64
@@ -73,6 +75,5 @@ def run_conversion(unit: ConversionUnit, simulate=False) -> UnitOutput:
     if not simulate:
         log.dedent()
         make_output(unit, output_data)
-        return None
 
     return output_data

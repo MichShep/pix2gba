@@ -1,10 +1,10 @@
 from pathlib import Path
 
-def add_template_file(project_root: Path):
+def add_template_file(project_root: Path) -> None:
     """
-    Simple function that creates a template pix2gba.toml file in the project root
-    :param project_root:
-    :return:
+    Creates a template pix2gba_template.toml file in the project root.
+    :param project_root: Directory to write the template into.
+    :return: None
     """
     template = """# Template pix2gba TOML (move into directory and remove `_output` from toml name
 [default]
@@ -36,4 +36,3 @@ dedupe = 1
 
     with open(str(template_path), 'w') as file:
         file.write(template)
-        file.close()

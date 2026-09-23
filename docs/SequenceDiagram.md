@@ -31,12 +31,6 @@ flowchart TD
         P7 --> P8
     end
 
-    subgraph G4["Native Compression"]
-        N1[["lz77.cpp<br/>(ctypes call)"]]
-    end
-    P7 -. "byte stream" .-> N1
-    N1 -. "compressed bytes" .-> P7
-
     subgraph G5["Output"]
         O1[tile_output.py → make_output]
     end
@@ -58,7 +52,6 @@ flowchart TD
     style G1 fill:#cfe2f3,stroke:#4a7ba6,color:#1a1a1a
     style G2 fill:#ffe9a8,stroke:#b8860b,color:#1a1a1a
     style G3 fill:#d6ead6,stroke:#5a8f5a,color:#1a1a1a
-    style G4 fill:#ffd6d6,stroke:#b85c5c,color:#1a1a1a
     style G5 fill:#e6d6f5,stroke:#8a5cb8,color:#1a1a1a
     style Dev fill:#ffffff,stroke:#4a7ba6,stroke-width:2px
     style Fin fill:#ffffff,stroke:#8a5cb8,stroke-width:2px

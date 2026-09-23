@@ -1,3 +1,4 @@
+import sys
 import toml
 import os
 
@@ -39,15 +40,16 @@ def discover_build_roots(root: Path) -> list[Path]:
 
     toml_file = root / "pix2gba.toml"
     if toml_file.is_file():
-        return [root]
+        results.append(root)
 
-    for entry in root.iterdir():
-        if entry.is_dir():
+    # Keep searching below a pix2gba.toml so nested build directories are found too (skip hidden dirs like .git/.venv)
+    for entry in sorted(root.iterdir()):
+        if entry.is_dir() and not entry.name.startswith("."):
             results.extend(discover_build_roots(entry))
 
     return results
 
-def _is_power_of_two(n: int):
+def _is_power_of_two(n: int) -> bool:
     """
     Determines whether a number is a power of two.
     :param n: Integer value to check.
@@ -55,7 +57,7 @@ def _is_power_of_two(n: int):
     """
     return n > 0 and (n & (n - 1) == 0)
 
-def _is_hex(s):
+def _is_hex(s: str) -> bool:
     """
     Checks whether a string represents a valid hexadecimal number.
     :param s: String to validate.
@@ -114,18 +116,18 @@ def validate_unit(unit: ConversionUnit, default: bool=False) -> int:
     if unit.metatile_height < 1 or unit.metatile_width < 1:
         log.error(
             f"Meta tile height/width must be greater than or equal to 1: "
-            f"mh=`{unit.metatile_height}`, mh=`{unit.metatile_width}`"
+            f"mh=`{unit.metatile_height}`, mw=`{unit.metatile_width}`"
         )
         return 3
 
     return 0
 
-def find_unit(build_roots: list[Path], unit_name:str) -> ConversionUnit:
+def find_unit(build_roots: list[Path], unit_name: str) -> Optional[ConversionUnit]:
     """
-    Finds and returns a ConversionUnit by name.
+    Finds and returns a ConversionUnit by name. Exits the program if no unit has that name.
     :param build_roots: List of directories containing pix2gba.toml files.
     :param unit_name: Name of the unit to locate.
-    :return: Matching ConversionUnit instance.
+    :return: Matching ConversionUnit instance, or None if it fails validation.
     """
     for build_root in build_roots:
         toml_file = build_root / "pix2gba.toml"
@@ -138,28 +140,39 @@ def find_unit(build_roots: list[Path], unit_name:str) -> ConversionUnit:
                 return convert_unit_dict(element, default_unit)
 
     log.error(f"Unit does not exist: `{unit_name}`")
-    exit(1)
+    sys.exit(1)
 
 def read_toml(build_root: Path) -> Optional[dict]:
+    """
+    Loads the pix2gba.toml file in a build directory.
+    :param build_root: Directory containing pix2gba.toml.
+    :return: Parsed TOML data, or None if the file is missing or invalid.
+    """
     toml_path = build_root / "pix2gba.toml"
 
     if toml_path.exists():
         try:
             return toml.load(toml_path)
-        except toml.TomlDecodeError: 
+        except toml.TomlDecodeError:
             log.error(f"Failed to decode toml at {toml_path} file returning blank")
 
     return None
 
-def build_default(root_dir:Path, data: dict) -> Optional[ConversionUnit]:
+def build_default(root_dir: Path, data: dict) -> Optional[ConversionUnit]:
+    """
+    Builds and validates the [default] unit of a pix2gba.toml file.
+    :param root_dir: Directory containing the pix2gba.toml file.
+    :param data: Parsed TOML data.
+    :return: The default ConversionUnit, or None if it is missing or invalid.
+    """
     # Make sure it has a default key
     if data.get("default", None) is None:
-        log.error(f"    Default argument field is missing!")
-        log.error( "    Abandoning.")
+        log.error("    Default argument field is missing!")
+        log.error("    Abandoning.")
         return None
-    
+
     remaining_args = TOML_ARGUMENTS.copy()
-    
+
     # Go through each field in default and make sure
     #   - No duplicate values
     #   - No foreign values
@@ -170,16 +183,17 @@ def build_default(root_dir:Path, data: dict) -> Optional[ConversionUnit]:
         if element not in TOML_ARGUMENTS:
             log.warn(f"    Unknown default argument: {element}... Discarding.")
             continue
-                    
+
         # Remove the used arg
         if element not in remaining_args:
             log.warn(f"    Duplicate of argument: {element}... Ignoring.")
+            continue
 
         remaining_args.remove(element)
-        
+
     if len(remaining_args):
         log.error(f"    Default arguments missing: {remaining_args}")
-        log.error( "    Abandoning.")
+        log.error("    Abandoning.")
         return None
 
     default_unit = ConversionUnit(
@@ -199,19 +213,25 @@ def build_default(root_dir:Path, data: dict) -> Optional[ConversionUnit]:
         root_dir=root_dir,
         image_path=Path("")
     )
-    
+
     # Validate values
     if validate_unit(default_unit, True):
         return None
 
     if data.get("unit", None) is None:
-        log.error(f"    There are no fields under the name `unit`!")
+        log.error("    There are no fields under the name `unit`!")
         log.error("    Abandoning.")
         return None
 
     return default_unit
 
 def convert_unit_dict(data: dict, default: ConversionUnit) -> Optional[ConversionUnit]:
+    """
+    Builds and validates a [[unit]] entry, filling missing fields from the default unit.
+    :param data: The unit's TOML table.
+    :param default: The default unit of the same pix2gba.toml file.
+    :return: The ConversionUnit, or None if it is invalid.
+    """
     if data.get("name") is None:
         log.error("    Unit name is missing (can't be defaulted)!")
         return None

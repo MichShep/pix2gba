@@ -6,7 +6,7 @@ from .gba_utils import rgb24_to_rgb15, unpack_gba_color
 import numpy as np
 from . import cli_log as log
 
-def float_transparent_color(gba_palette:list, transparent:int) -> list:
+def float_transparent_color(gba_palette: list[int], transparent: int) -> list[int]:
     """
     Will take the transparent color and will force it to be the first color in palette.
     The old first color will become the last color.
@@ -26,7 +26,7 @@ def float_transparent_color(gba_palette:list, transparent:int) -> list:
 
     return gba_palette
 
-def extract_palette_img(filename:str, bpp:int, transparent:int) -> Optional[list]:
+def extract_palette_img(filename: str, bpp: int, transparent: int) -> Optional[list[int]]:
     """
     Extract a GBA palette directly from an image where each pixel represents
     a palette entry.
@@ -55,13 +55,13 @@ def extract_palette_img(filename:str, bpp:int, transparent:int) -> Optional[list
                 rgb24_to_rgb15(pxl)
             )
 
-    # Force magenta as palette index 0 (transparency key)
+    # Force the transparent color to palette index 0
     float_transparent_color(gba_palette, transparent)
 
     return gba_palette
 
 
-def palette_from_img(filename:str, bpp:int, transparent:int) -> list:
+def palette_from_img(filename: str, bpp: int, transparent: int) -> list[int]:
     """
     Generate a GBA palette from an image by selecting the most frequently
     used colors and enforcing GBA palette constraints.
@@ -73,7 +73,8 @@ def palette_from_img(filename:str, bpp:int, transparent:int) -> list:
     """
     img = PILImage.open(filename).convert("RGB")
 
-    colors = img.getcolors()
+    # getcolors() returns None past maxcolors (default 256), so allow one color per pixel
+    colors = img.getcolors(maxcolors=img.width * img.height)
     colors.sort(key=lambda c: c[0], reverse=True)
 
     top_col = [color for count, color in colors[:2**bpp]]
@@ -88,7 +89,7 @@ def palette_from_img(filename:str, bpp:int, transparent:int) -> list:
     return gba_palette
 
 
-def closest_gba_color(color:int, gba_palette:list) -> int:
+def closest_gba_color(color: int, gba_palette: list[int]) -> int:
     """
     Find the closest matching GBA palette color using Euclidean distance
     in RGB space.
@@ -107,7 +108,7 @@ def closest_gba_color(color:int, gba_palette:list) -> int:
     return int(np.argmin(distances))
 
 
-def create_conversion_table(input_img : str, gba_palette) -> dict:
+def create_conversion_table(input_img: str, gba_palette: list[int]) -> dict[int, int]:
     """
     Create a lookup table mapping image colors to palette indices based
     on closest GBA color matching.
@@ -117,11 +118,11 @@ def create_conversion_table(input_img : str, gba_palette) -> dict:
     :return: Dictionary mapping RGB15 colors to palette indices.
     """
     img = PILImage.open(input_img).convert("RGB")
-    img_palette = img.getcolors()
+    img_palette = img.getcolors(maxcolors=img.width * img.height)
 
     img24_to_gba15 = {}
 
-    for junk, color in img_palette:
+    for _, color in img_palette:
         gba_col = rgb24_to_rgb15(color)
 
         closest_idx = closest_gba_color(gba_col, gba_palette)

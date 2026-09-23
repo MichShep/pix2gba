@@ -1,10 +1,31 @@
 from PIL import Image as PILImage
 import math
+from typing import Union
 
 from .gba_utils import rgb24_to_rgb15
 from .units import ConversionUnit
 
-def create_tile_data(unit: ConversionUnit, conversion_table:dict, hex_out:bool=True) -> list:
+def padded_dimensions(width: int, height: int, meta_w: int, meta_h: int) -> tuple[int, int]:
+    """
+    Rounds image dimensions up to a whole number of metatiles.
+    :param width: Image width in pixels.
+    :param height: Image height in pixels.
+    :param meta_w: Metatile width in 8x8 tiles.
+    :param meta_h: Metatile height in 8x8 tiles.
+    :return: Padded (width, height) in pixels.
+    """
+    meta_px_w = meta_w * 8
+    meta_px_h = meta_h * 8
+    return math.ceil(width / meta_px_w) * meta_px_w, math.ceil(height / meta_px_h) * meta_px_h
+
+def create_tile_data(unit: ConversionUnit, conversion_table: dict[int, int], hex_out: bool = True) -> list[Union[str, int]]:
+    """
+    Packs an image into GBA tile data, ordered by metatile.
+    :param unit: Unit whose image is converted.
+    :param conversion_table: Maps each RGB15 image color to a palette index.
+    :param hex_out: If True, words are "0x%08x" strings, otherwise plain ints.
+    :return: Flat list of packed u32 words.
+    """
     file_path = unit.image_path
     meta_w = unit.metatile_width
     meta_h = unit.metatile_height
@@ -12,17 +33,10 @@ def create_tile_data(unit: ConversionUnit, conversion_table:dict, hex_out:bool=T
 
     # Load the image and ensure it is in RGB format
     img = PILImage.open(file_path).convert("RGB")
-    width, height = img.size
+    img_width, img_height = img.size
 
-    # Pad the image dimensions so they are multiples of 8 (GBA tile size)
-    round_width = math.ceil(width / 8) * 8
-    round_height = math.ceil(height / 8) * 8
-    if (round_width, round_height) != (width, height):
-        # Create a padded image using magenta as the filler color
-        padded = PILImage.new("RGB", (round_width, round_height), (255, 0, 255))
-        padded.paste(img, (0, 0))
-        img = padded
-        width, height = round_width, round_height
+    # Pad the dimensions to whole metatiles; pixels outside the image use palette index 0 (transparent)
+    width, height = padded_dimensions(img_width, img_height, meta_w, meta_h)
 
     # Total pixel dimensions of a single metatile
     meta_total_width = meta_w * 8
@@ -30,9 +44,7 @@ def create_tile_data(unit: ConversionUnit, conversion_table:dict, hex_out:bool=T
 
     # Compute overall data size metrics
     num_pxl = width * height              # Total number of pixels
-    num_bits = num_pxl * bpp              # Total number of bits
-    num_bytes = num_bits // 8             # Total number of bytes
-    num_u32 = num_bytes // 4              # Total number of 32-bit words
+    num_tile_rows = num_pxl // 8          # Total number of 8-pixel tile rows
 
     # Number of metatiles that fit horizontally
     num_metatiles_width = width // (meta_w * 8)
@@ -42,9 +54,8 @@ def create_tile_data(unit: ConversionUnit, conversion_table:dict, hex_out:bool=T
     x_offset = y_offset = 0
 
     # Counters for tile, metatile, and pixel traversal
-    pxl_bit_count = pxl_row_count = meta_row_count = meta_col_count = 0
+    pxl_row_count = meta_row_count = meta_col_count = 0
     metatile_row_count = metatile_col_count = 0
-    total_meta_tiles = 0
 
     # Output tile data as a flat list
     tile_data_1d = []
@@ -52,27 +63,26 @@ def create_tile_data(unit: ConversionUnit, conversion_table:dict, hex_out:bool=T
     # Number of pixels packed into a single 32-bit word
     pixels_per_u32 = 32 // bpp
 
-    # Number of bytes per pixel row segment (used implicitly)
-    bits_per_pixel_row = bpp // 4
-    # 8bpp -> 2
-    # 4bpp -> 1
-
     try:
-        # Iterate over each 32-bit word of output data
-        for i in range(0, num_u32):  # Each U32 contains (32 / bpp) pixels
+        # Iterate over each 8-pixel tile row (one or more 32-bit words, depending on bpp)
+        for _ in range(num_tile_rows):
             line_offset = 0
 
             # Process one 8-pixel row of a tile in chunks
-            for j in range(0, 8, pixels_per_u32):
+            for _ in range(0, 8, pixels_per_u32):
                 word = 0
 
                 # Pack palette indices into a 32-bit word
                 for x in range(pixels_per_u32):
-                    # Read the pixel from the image
-                    px = img.getpixel((x + x_offset + line_offset, y + y_offset))
+                    px_x = x + x_offset + line_offset
+                    px_y = y + y_offset
 
-                    # Convert RGB24 -> RGB15 -> palette index
-                    idx = conversion_table[rgb24_to_rgb15(px)]
+                    if px_x >= img_width or px_y >= img_height:
+                        # Padding pixel -> transparent palette index
+                        idx = 0
+                    else:
+                        # Convert RGB24 -> RGB15 -> palette index
+                        idx = conversion_table[rgb24_to_rgb15(img.getpixel((px_x, px_y)))]
 
                     # Shift palette index into the correct position
                     shift = bpp * x
@@ -103,7 +113,6 @@ def create_tile_data(unit: ConversionUnit, conversion_table:dict, hex_out:bool=T
 
             # Finished a full metatile
             if meta_row_count % meta_h == 0 and meta_row_count != 0:
-                total_meta_tiles += 1
                 metatile_col_count += 1
                 meta_row_count = 0
 

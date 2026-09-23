@@ -2,7 +2,7 @@ import argparse
 from . import cli_log as log
 from .api import build_outputs, clean_outputs, make_template, view_output, verify_inputs, create_byte_data
 
-def print_help():
+def print_help() -> None:
     """
     Prints the pix2gba command help.
     """
@@ -29,7 +29,10 @@ Examples:
     pix2gba byte sprite7
 """)
 
-def main():
+def main() -> None:
+    """
+    Parses the command line and runs the matching pix2gba command.
+    """
     parser = argparse.ArgumentParser(
         prog="pix2gba",
         description="Convert an Image (PNG, JPEG) to GBA-compatible tile data."

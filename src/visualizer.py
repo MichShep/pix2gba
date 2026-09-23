@@ -18,8 +18,8 @@ class OutputWindow(QtWidgets.QMainWindow):
 
     def __init__(
         self,
-        tile_data: list,
-        pal_data: list,
+        tile_data: list[str],
+        pal_data: list[int],
         bpp: int,
         pxl_width: int,
         pxl_height: int,
@@ -80,11 +80,13 @@ class OutputWindow(QtWidgets.QMainWindow):
         x_offset = y_offset = 0
         pxl_row_count = meta_row_count = meta_col_count = 0
         metatile_row_count = metatile_col_count = 0
-        total_meta_tiles = 0
 
         # Bit unpacking helpers
         pxl_per_u32 = 32 // self.bpp
         pxl_mask = (1 << self.bpp) - 1
+
+        # Horizontal position within the current 8-pixel tile row (8bpp rows span two words)
+        line_offset = 0
 
         # Iterate over each packed 32-bit word
         for u32_hex in self.tile_data:
@@ -98,12 +100,18 @@ class OutputWindow(QtWidgets.QMainWindow):
                 pen.setColor(QtGui.QColor(r, g, b))
                 painter.setPen(pen)
                 painter.fillRect(
-                    x_offset + pxl,
+                    x_offset + line_offset + pxl,
                     y + y_offset,
                     1,
                     1,
                     QtGui.QColor(r, g, b),
                 )
+
+            # Only advance to the next row once the full 8-pixel tile row is drawn
+            line_offset += pxl_per_u32
+            if line_offset < 8:
+                continue
+            line_offset = 0
 
             # Advance within tile rows
             y += 1
@@ -121,7 +129,6 @@ class OutputWindow(QtWidgets.QMainWindow):
 
             # Move to next metatile
             if meta_row_count % self.meta_height == 0 and meta_row_count != 0:
-                total_meta_tiles += 1
                 metatile_col_count += 1
                 meta_row_count = 0
 

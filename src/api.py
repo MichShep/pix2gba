@@ -8,6 +8,7 @@ from PIL import Image as PILImage
 from .config import discover_build_roots, find_unit
 from .visualizer import OutputWindow
 from .converter import run_conversion
+from .tile_creator import padded_dimensions
 from .config import build_default, read_toml, convert_unit_dict
 from .units import ConversionStats, VerificationStats
 from .template_output import add_template_file
@@ -38,7 +39,7 @@ def _output_conversion_stats(stats: ConversionStats) -> None:
     else:
         log.summary("No successful conversions found.")
 
-def build_outputs():
+def build_outputs() -> None:
     """
     Handler for finding all units, converting them, and saving the output
     :return: None
@@ -66,9 +67,9 @@ def build_outputs():
         toml_data = read_toml(build_path)
 
         if toml_data is None:
-            return
+            continue
 
-        log.info(f"Loading default", build_path.relative_to(ROOT_DIRECTORY))
+        log.info("Loading default", str(build_path.relative_to(ROOT_DIRECTORY)))
         default_unit = build_default(build_path, toml_data)
 
         if default_unit is None:
@@ -90,14 +91,14 @@ def build_outputs():
             log.indent()
 
             # Validate the unit (Paths/TOML/Values)
-            log.info(f"Validating...")
+            log.info("Validating...")
             converted_unit = convert_unit_dict(unit_data, default_unit)
             if converted_unit is None:
                 log.skip("Abandoning.")
                 failed_units.append(unit_data["name"])
                 log.dedent()
                 continue
-            log.ok(f"Validated.")
+            log.ok("Validated.")
 
             # If the same cache then ignore
             if converted_unit.cache and not needs_rebuild(converted_unit, cache_dict, default_unit):
@@ -106,9 +107,13 @@ def build_outputs():
                 continue
 
             # Start Conversion
-            log.info(f"Converting...")
-            run_conversion(converted_unit)
-            log.ok(f"Converted.")
+            log.info("Converting...")
+            if run_conversion(converted_unit) is None:
+                log.skip("Conversion failed. Abandoning.")
+                failed_units.append(name)
+                log.dedent()
+                continue
+            log.ok("Converted.")
 
             successful_units += [converted_unit]
             local_success += [converted_unit]
@@ -122,7 +127,7 @@ def build_outputs():
         create_cache(default_unit, local_success)
         log.ok("Cache Updated.")
 
-        log.ok("Build Directory Finished\n", build_path.relative_to(ROOT_DIRECTORY))
+        log.ok("Build Directory Finished\n", str(build_path.relative_to(ROOT_DIRECTORY)))
 
     log.dedent()
 
@@ -132,8 +137,11 @@ def build_outputs():
     _output_conversion_stats(stats)
 
 
-
 def clean_outputs() -> None:
+    """
+    Handler for removing every cache file and generated output file
+    :return: None
+    """
     log.summary(f"Cleaning all units in {ROOT_DIRECTORY}")
     log.indent()
 
@@ -152,10 +160,14 @@ def clean_outputs() -> None:
             os.remove(cache_path)
             log.summary(f"Removed {cache_path.relative_to(ROOT_DIRECTORY)}")
 
-        if toml_data.get("unit", None) is None:
+        if toml_data is None or toml_data.get("unit", None) is None:
+            log.dedent()
             continue
 
         default_unit = build_default(path, toml_data)
+        if default_unit is None:
+            log.dedent()
+            continue
 
         # Iterate through each unit and delete the files generated from it
         for unit_dict in toml_data["unit"]:
@@ -176,14 +188,14 @@ def clean_outputs() -> None:
                 out_dir / f"{name}_palette.png",
             ]
 
-            for path in paths:
-                if path.exists():
-                    path.unlink()
-                    log.info(f"Removed {path.relative_to(ROOT_DIRECTORY)}")
+            for out_path in paths:
+                if out_path.exists():
+                    out_path.unlink()
+                    log.info(f"Removed {out_path.relative_to(ROOT_DIRECTORY)}")
         log.dedent()
 
 
-def view_output(img_name:str):
+def view_output(img_name: str) -> None:
     """
     Handler for creating a window that shows what a unit will look like on a GBA
     :param img_name: Name of the unit to display
@@ -201,13 +213,18 @@ def view_output(img_name:str):
         return
 
     output = run_conversion(found_unit, True)
+    if output is None:
+        log.error("Problem converting unit")
+        return
+
     img = PILImage.open(Path(found_unit.image_path))
 
     # Visualize!
     app = QtWidgets.QApplication.instance()
     if app is None:
         app = QtWidgets.QApplication([])
-    output_window = OutputWindow(output.u32_data, output.gba_palette, found_unit.bpp, img.width, img.height, found_unit.metatile_width, found_unit.metatile_height)
+    pad_w, pad_h = padded_dimensions(img.width, img.height, found_unit.metatile_width, found_unit.metatile_height)
+    output_window = OutputWindow(output.u32_data, output.gba_palette, found_unit.bpp, pad_w, pad_h, found_unit.metatile_width, found_unit.metatile_height)
     output_window.render()
     output_window.show()
     app.exec()
@@ -223,13 +240,11 @@ def make_template() -> None:
     add_template_file(ROOT_DIRECTORY)
 
 def _output_verification_stats(stats: VerificationStats) -> None:
-    error_code = [
-        "Null",
-        "Image path does not exist",
-        "Palette path does not exist",
-        "Metatile width and height must be >= 1"
-    ]
-
+    """
+    Output the final verification stats (how many failed and which ones)
+    :param stats: VerificationStats data struct with final verification statistics
+    :return: None
+    """
     log.summary("Final Statistics.")
     log.indent()
     if stats.total_units != 0:
@@ -242,7 +257,7 @@ def _output_verification_stats(stats: VerificationStats) -> None:
 def verify_inputs() -> None:
     """
     Handler for verifying all units in the TOML files can be converted successfully
-    :return:
+    :return: None
     """
     log.info(f"Verifying all units in {ROOT_DIRECTORY}")
     log.indent()
@@ -262,9 +277,9 @@ def verify_inputs() -> None:
         toml_data = read_toml(build_path)
 
         if toml_data is None:
-            return
+            continue
 
-        log.info(f"Verifying default...", build_path.relative_to(ROOT_DIRECTORY))
+        log.info("Verifying default...", str(build_path.relative_to(ROOT_DIRECTORY)))
         default_unit = build_default(build_path, toml_data)
 
         if default_unit is None:
@@ -280,7 +295,7 @@ def verify_inputs() -> None:
             name = unit_data["name"]
 
             # Ignore the cache for verifying
-            log.info(f"Verifying unit...", name)
+            log.info("Verifying unit...", name)
             converted_unit = convert_unit_dict(unit_data, default_unit)
 
             if converted_unit is None:
@@ -299,7 +314,12 @@ def verify_inputs() -> None:
     log.dedent()
     _output_verification_stats(stats)
 
-def create_byte_data(img_name:str) -> None:
+def create_byte_data(img_name: str) -> None:
+    """
+    Handler for writing a unit's raw tile data to <img_name>_bytes.bin
+    :param img_name: Name of the unit to output
+    :return: None
+    """
     log.info(f"Creating byte data of {img_name} in {ROOT_DIRECTORY}.")
     # Get all reachable toml files
     build_paths = discover_build_roots(ROOT_DIRECTORY)
@@ -312,6 +332,9 @@ def create_byte_data(img_name:str) -> None:
         return
 
     output = run_conversion(found_unit, True)
+    if output is None:
+        log.error("Problem converting unit.")
+        return
 
     # Convert to byte data
     log.info("Converting tile data to bytes.")

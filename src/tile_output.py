@@ -1,11 +1,8 @@
-import os
 from PIL import Image as PILImage
 from pathlib import Path
 from .gba_utils import rgb15_to_rgb888
 from .units import ConversionUnit, UnitOutput
-
-# Type alias for a loaded PIL image
-LoadedImage = PILImage.Image
+from .tile_creator import padded_dimensions
 
 OUTPUT_VAR_NAMES = {
     "tiles": "_TILES",
@@ -19,7 +16,13 @@ OUTPUT_VAR_NAMES = {
     "palette": "_PAL"
 }
 
-def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> None:
+def create_header_file(unit_data: ConversionUnit, output_data: UnitOutput) -> None:
+    """
+    Writes the unit's .h file with macros and extern declarations.
+    :param unit_data: Unit being output.
+    :param output_data: Conversion result for the unit.
+    :return: None
+    """
     image = PILImage.open(unit_data.image_path)
 
     # Extract metatile and color depth configuration
@@ -27,9 +30,11 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
     meta_h = unit_data.metatile_height
     bpp = unit_data.bpp
 
-    # Extract image dimensions
+    # Extract image dimensions (and the whole-metatile size the tile data was padded to)
     img_w = image.width
     img_h = image.height
+    pad_w, pad_h = padded_dimensions(img_w, img_h, meta_w, meta_h)
+    padded_output = f" (padded to {pad_w}pxl by {pad_h}pxl)" if (pad_w, pad_h) != (img_w, img_h) else ""
 
     # Output destination and input paths
     dest = unit_data.output_dir
@@ -78,26 +83,23 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
         current_size = no_size
 
         if unit_data.dedupe:
-            size_output += f" + Deduping"
+            size_output += " + Deduping"
             current_size = dedupe_size
 
         if unit_data.compress:
-            size_output += f" + Compression"
+            size_output += " + Compression"
             current_size = compress_size + (num_tiles * 2 if unit_data.dedupe else 0)
 
         perc = (1 - current_size / no_size) * 100
         size_output += f" = {current_size}B ({perc:.2f}% reduction)\n"
 
-
-
-
     # Detailed metadata block
     file_str += (
         "//======================================================================\n" +
-                 "//	" + file_name + ", " + str(img_w) + "pxl by " + str(img_h) + "pxl @ " + str(bpp) + "bpp\n" +
+                 "//	" + file_name + ", " + str(img_w) + "pxl by " + str(img_h) + "pxl @ " + str(bpp) + "bpp" + padded_output + "\n" +
                  "//\t+ Number of Tiles : " + str(num_tile_output) + "\n" +
                  "//\t+ Metatile Shape  : " + str(meta_w) + "w by " + str(meta_h) + "h\n" +
-                 "//\t+ Dimensions in MT: " + str(img_w // (8 * meta_w)) + "w by " + str(img_h // (8 * meta_h)) + "h\n" +
+                 "//\t+ Dimensions in MT: " + str(pad_w // (8 * meta_w)) + "w by " + str(pad_h // (8 * meta_h)) + "h\n" +
                  "//\t+ Number of Bytes : " + num_bytes_output + "\n" +
                  "//\t+ Number of U32   : " + str(num_u32) + "\n" +
                  "//\t+ Blank Color     : " + hex(output_data.gba_palette[0]) + "\n" +
@@ -179,7 +181,13 @@ def create_header_file(unit_data: ConversionUnit, output_data : UnitOutput) -> N
     with open(new_file_name, "w") as file:
         file.write(file_str)
 
-def create_c_file(unit_data: ConversionUnit, output_data : UnitOutput) -> None:
+def create_c_file(unit_data: ConversionUnit, output_data: UnitOutput) -> None:
+    """
+    Writes the unit's .c file with the tile, mapping and palette arrays.
+    :param unit_data: Unit being output.
+    :param output_data: Conversion result for the unit.
+    :return: None
+    """
     num_u32 = len(output_data.u32_data)
 
     # Begin C array definition with alignment attributes
@@ -258,7 +266,13 @@ def create_c_file(unit_data: ConversionUnit, output_data : UnitOutput) -> None:
     with open(new_file_name, "w") as file:
         file.write(file_str)
 
-def create_palette_png(unit: ConversionUnit, output_data : UnitOutput) -> None:
+def create_palette_png(unit: ConversionUnit, output_data: UnitOutput) -> None:
+    """
+    Writes a square PNG preview of the unit's palette.
+    :param unit: Unit being output.
+    :param output_data: Conversion result for the unit.
+    :return: None
+    """
     # Determine the palette image dimensions (square)
     bpp = unit.bpp
 
@@ -289,7 +303,13 @@ def create_palette_png(unit: ConversionUnit, output_data : UnitOutput) -> None:
 
     pal_img.save(file_path)
 
-def make_output(unit_data: ConversionUnit, output_data : UnitOutput) -> None:
+def make_output(unit_data: ConversionUnit, output_data: UnitOutput) -> None:
+    """
+    Writes every output file the unit asks for.
+    :param unit_data: Unit being output.
+    :param output_data: Conversion result for the unit.
+    :return: None
+    """
     # Determine which output files to generate
     output_type = unit_data.output_type
 
@@ -300,7 +320,6 @@ def make_output(unit_data: ConversionUnit, output_data : UnitOutput) -> None:
     # Generate header file if requested
     if output_type == "both" or output_type == "h":
         create_header_file(unit_data, output_data)
-        pass
 
     # Generate palette preview PNG if enabled
     if unit_data.generate_palette:

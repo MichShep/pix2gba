@@ -1,20 +1,30 @@
 from pathlib import Path
+from typing import Union
 from PIL import Image
 import json
 import hashlib
 from . import cli_log as log
-
-VERSION = "0.7.0"
-
 from .units import ConversionUnit
 
+VERSION = "0.8.0"
 
-def hash_dict(data):
+
+def hash_dict(data: dict) -> str:
+    """
+    Returns a stable SHA-256 hash of a JSON-serializable dict.
+    :param data: Dict to hash.
+    :return: Hex digest of the hash.
+    """
     serialized_data = json.dumps(data, sort_keys=True).encode("utf-8")
     return hashlib.sha256(serialized_data).hexdigest()
 
 
-def hash_image_pixels(path):
+def hash_image_pixels(path: Union[str, Path]) -> str:
+    """
+    Returns a SHA-256 hash of an image's pixel data and size.
+    :param path: Path to the image file.
+    :return: Hex digest of the hash.
+    """
     img = Image.open(path).convert("RGBA")
     h = hashlib.sha256()
     h.update(img.tobytes())
@@ -22,8 +32,17 @@ def hash_image_pixels(path):
     return h.hexdigest()
 
 
-def _hash_unit_dict(unit: ConversionUnit):
+def _hash_unit_dict(unit: ConversionUnit) -> str:
+    """
+    Returns a hash of the unit settings that affect the conversion output.
+    :param unit: Unit to hash.
+    :return: Hex digest of the hash.
+    """
     unit_dict = {
+        "bpp": unit.bpp,
+        "transparent": unit.transparent,
+        "output_type": unit.output_type,
+        "destination": str(unit.output_dir),
         "metatile_width": unit.metatile_width,
         "metatile_height": unit.metatile_height,
         "palette": unit.palette_path,
@@ -52,6 +71,11 @@ def _hash_palette(unit: ConversionUnit) -> str:
 
 
 def get_cache_dict(build_path: Path) -> dict:
+    """
+    Loads pix2gba_cache.json from a build directory.
+    :param build_path: Directory that holds the cache file.
+    :return: The cache contents, or an empty dict if missing or unreadable.
+    """
     cache_path = build_path / "pix2gba_cache.json"
 
     if not cache_path.exists():
@@ -65,7 +89,7 @@ def get_cache_dict(build_path: Path) -> dict:
         return {}
 
 
-def needs_rebuild(unit: ConversionUnit, cache_dict: dict, default_unit: ConversionUnit,) -> bool:
+def needs_rebuild(unit: ConversionUnit, cache_dict: dict, default_unit: ConversionUnit) -> bool:
     """
     Returns True if the unit needs rebuilding, False otherwise.
     Assumes cache_dict was already read from pix2gba_cache.json.
@@ -79,7 +103,7 @@ def needs_rebuild(unit: ConversionUnit, cache_dict: dict, default_unit: Conversi
 
     old_hashes = cache_dict.get(unit.name)
 
-    # Unit not cached → rebuild
+    # Unit not cached -> rebuild
     if old_hashes is None:
         return True
 
@@ -99,7 +123,7 @@ def needs_rebuild(unit: ConversionUnit, cache_dict: dict, default_unit: Conversi
     return False
 
 
-def create_cache(default_unit: ConversionUnit, passed_units: list[ConversionUnit]):
+def create_cache(default_unit: ConversionUnit, passed_units: list[ConversionUnit]) -> None:
     """
     Updates cache files after conversion.
     """
@@ -111,7 +135,7 @@ def create_cache(default_unit: ConversionUnit, passed_units: list[ConversionUnit
     # Load existing cache so valid units are preserved
     cache_dict = get_cache_dict(default_unit.root_dir)
 
-    # Store default hash once, at the top level — every unit is
+    # Store default hash once, at the top level; every unit is
     # checked against this same value, not a per-unit copy.
     cache_dict["default"] = _hash_unit_dict(default_unit)
 

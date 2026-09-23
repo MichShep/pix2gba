@@ -22,7 +22,7 @@ def rgb888_to_hex(color: tuple[int, int, int]) -> str:
     r8, g8, b8 = color
 
     rh = (r8 << 16)
-    gh = (r8 << 8)
+    gh = (g8 << 8)
     bh = b8
 
     return hex(rh + gh + bh)
